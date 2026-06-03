@@ -1,0 +1,46 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Agents of Chaos — Red-teaming for multi-agent AI systems",
+  description = "Agents of Chaos runs live multi-agent red-team campaigns against frontier AI agents. We authored the Agents of Chaos study and have led internal red-team engagements for OpenAI.",
+} = Astro.props;
+
+const path = Astro.url.pathname;
+const isCurrent = (href: string) =>
+  href === "/" ? path === "/" : path.startsWith(href);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="wordmark" href="/">Agents of Chaos</a>
+      <nav>
+        <a href="/about" aria-current={isCurrent("/about") ? "page" : undefined}>about</a>
+        <a href="/blog" aria-current={isCurrent("/blog") ? "page" : undefined}>blog</a>
+        <a href="/contact" aria-current={isCurrent("/contact") ? "page" : undefined}>contact</a>
+      </nav>
+    </header>
+
+    <slot />
+
+    <Footer />
+  </body>
+</html>

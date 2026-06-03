@@ -1,0 +1,14 @@
+---
+import { team } from "../data/team";
+---
+
+<div class="people">
+  {
+    team.map((m) => (
+      <div class="person">
+        <h3>{m.name}</h3>
+        <div class="role">{m.role}</div>
+      </div>
+    ))
+  }
+</div>

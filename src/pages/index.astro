@@ -1,17 +1,106 @@
 ---
-
+import Base from "../layouts/Base.astro";
+import LoopDiagram from "../components/LoopDiagram.astro";
+import TeamGrid from "../components/TeamGrid.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base>
+  <header class="hero">
+    <div class="hero-copy">
+      <h1>Agents of Chaos</h1>
+      <p class="subtitle">Red-teaming on multi-agent systems</p>
+      <nav class="hero-nav">
+        <a href="#track-record">→ track record</a>
+        <a href="#what-we-do">→ what we do</a>
+        <a href="/contact">→ contact</a>
+      </nav>
+    </div>
+    <div class="hero-visual">
+      <img
+        src="/constellation.svg"
+        alt="Abstract visualization of a populated multi-agent environment: a constellation of grey dots with a few in red, connected by faint lines, suggesting emergent failures propagating through the population."
+      />
+    </div>
+  </header>
+
+  <div class="reading">
+    <span class="section-label"><span class="num">01</span>/ pitch</span>
+
+    <p class="intro">
+      <span class="drop">M</span><b
+        >ulti-agent AI systems are the next major unlock.</b
+      >&nbsp;Banks will soon use agents for customer service, healthcare will use
+      them for triage, and coding agents are already interacting with each other.
+      Our economy is primed to incorporate groups of agents that coordinate, hand
+      off, and act autonomously to absorb a vast amount of human-in-the-loop work.&nbsp;
+    </p>
+
+    <p class="intro">
+      However, these agents are <a href="https://agentsofchaos.baulab.info/"
+        >not yet safe</a
+      >&nbsp; when put in multi-agent environments, creating a massive safety
+      bottleneck in real deployment.&nbsp;<br /><br />We fix this bottleneck.
+    </p>
+  </div>
+
+  <LoopDiagram />
+
+  <div class="reading">
+    <p class="lede">
+      <span class="drop">W</span>e custom-build the test environment that your
+      agents will run in. We then use it to build and red-team groups of AI
+      agents, iteratively improving both. This process iteratively removes
+      sources of potential harm, which we measure as we go. The result is groups
+      of interacting agents that can be safely deployed in high-pressure settings.
+    </p>
+
+    <span class="section-label" id="track-record"
+      ><span class="num">02</span>/ background</span
+    >
+    <h2>Track record</h2>
+
+    <p>
+      We were the first to publish work red-teaming multiple OpenClaw agents in a
+      Discord server with&nbsp;<em><b>Agents of Chaos</b></em>
+      (<a href="https://agentsofchaos.baulab.info/">Shapira et al., 2026</a>),
+      covered by <i>Science</i> and <i>Wired</i>, documenting how autonomous
+      agents leak private data, spoof identity, and report false success.<br /><br
+      />Since then, we have designed and led follow-up campaigns with OpenAI on
+      internal red-teaming efforts — first with a successful two-week campaign,
+      then with a month-long second campaign.
+    </p>
+
+    <span class="section-label" id="what-we-do"
+      ><span class="num">03</span>/ approach</span
+    >
+    <h2>What we do</h2>
+
+    <div class="what-list">
+      <p>
+        <strong>Red-Teaming.</strong> We create populated ecosystems with many
+        agents and an experienced team acting as red-teamers, and then we run them
+        continuously through short campaigns.
+      </p>
+
+      <p>
+        <strong>Custom adversarial infrastructure.</strong>&nbsp;We'll adapt your
+        business's native environment and workflow into stress-testable campaign
+        infrastructure. Each campaign runs on a custom runtime that exposes agent
+        workspaces, memories, and tool access. This lets attacks land where they
+        would in production.
+      </p>
+
+      <p>
+        <strong>Integrated harm reports.</strong>&nbsp;We'll generate a structured
+        plan for you to integrate AI agents safely, and we act as third-party
+        auditors for your integrations. We'll produce a daily-updated harm
+        taxonomy, severity ratings, sanitised artifacts, and recommended
+        mitigations so that your business is free to act immediately.
+      </p>
+    </div>
+
+    <span class="section-label"><span class="num">04</span>/ team</span>
+    <h2>Team</h2>
+    <TeamGrid />
+  </div>
+</Base>
