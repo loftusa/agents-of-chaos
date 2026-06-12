@@ -1,0 +1,46 @@
+---
+import Base from "../layouts/Base.astro";
+import TeamGraph from "../components/TeamGraph.astro";
+import TeamGrid from "../components/TeamGrid.astro";
+---
+
+<Base
+  title="Team — Agents of Chaos"
+  description="The eight people behind Agents of Chaos, and the work that proves them: the Agents of Chaos study, frontier-lab red-team campaigns, and the research world they come from."
+>
+  <div class="reading">
+    <div class="page-head">
+      <h1>Team</h1>
+      <p class="subtitle">Eight people, and the work that proves them.</p>
+    </div>
+
+    <p>
+      We are researchers, red-teamers, and engineers. Four of us are authors of
+      <em>Agents of Chaos</em>
+      (<a href="https://agentsofchaos.baulab.info/">Shapira et al., 2026</a>),
+      the first study of emergent harm in populated multi-agent environments —
+      covered by
+      <a href="https://www.science.org/content/article/ai-algorithms-can-become-agents-chaos"><i>Science</i></a>
+      and
+      <a href="https://www.wired.com/story/openclaw-ai-agent-manipulation-security-northeastern-study/"><i>Wired</i></a>.
+      Together we designed and ran the internal red-team campaigns we now lead
+      for a frontier lab.
+    </p>
+
+    <p>
+      The map below is how we fit together. Red is us and the work we share;
+      the quieter labels are where each of us comes from. Click anyone — every
+      claim links to its source.
+    </p>
+  </div>
+
+  <div class="reading">
+    <span class="section-label"><span class="num">01</span>/ the work</span>
+  </div>
+  <TeamGraph />
+
+  <div class="reading">
+    <span class="section-label"><span class="num">02</span>/ the people</span>
+  </div>
+  <TeamGrid />
+</Base>
