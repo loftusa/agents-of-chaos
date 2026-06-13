@@ -1,14 +1,31 @@
 ---
-import { team } from "../data/team";
+/* Bio cards for /team, rendered from the same src/data/team module as the
+ * evidence graph. No script here — team-graph.ts wires the [data-person-id]
+ * hooks for hover/click sync. Load-bearing facts stay in static ink (the
+ * `tline` row) so the page reads fully on print/PDF and without JS. */
+import { team, nodes } from "../data/team";
+
+const nodeById = new Map(nodes.map((n) => [n.id, n]));
+const tline = (m: (typeof team)[number]) =>
+  m.ties.map((t) => nodeById.get(t.node)?.label).filter(Boolean).join(" · ");
 ---
 
-<div class="people">
+<div class="people people--cards">
   {
     team.map((m) => (
-      <div class="person">
+      <article class="person" data-person-id={m.id}>
         <h3>{m.name}</h3>
         <div class="role">{m.role}</div>
-      </div>
+        <p class="line">{m.line}</p>
+        <div class="tline">{tline(m)}</div>
+        {m.links?.length ? (
+          <div class="plinks">
+            {m.links.map((l) => (
+              <a href={l.href} target="_blank" rel="noopener">{l.label}</a>
+            ))}
+          </div>
+        ) : null}
+      </article>
     ))
   }
 </div>
