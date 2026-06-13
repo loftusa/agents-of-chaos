@@ -57,10 +57,9 @@ export const nodes: GraphNode[] = [
   },
   {
     id: "frontier-campaigns",
-    label: "frontier-lab campaigns†",
+    label: "frontier-lab campaigns",
     full: "Internal red-team campaigns designed and led for a frontier lab (2026–). A measurable success that led to a follow-up.",
     type: "work",
-    note: "client under NDA",
   },
   {
     id: "nnsight",
@@ -132,7 +131,7 @@ export const team: Member[] = [
     id: "alex-loftus",
     name: "Alex Loftus",
     role: "Lead",
-    line: "Mech interp PhD in the Bau Lab; co-author of NNsight/NDIF and Agents of Chaos",
+    line: "Co-author of Agents of Chaos; leads red-team campaigns — Bau Lab, Northeastern",
     links: [
       { label: "site", href: "https://alex-loftus.com" },
       { label: "scholar", href: "https://scholar.google.com/citations?user=_Njcmm8AAAAJ" },
@@ -151,7 +150,7 @@ export const team: Member[] = [
     id: "jannik-brinkmann",
     name: "Jannik Brinkmann",
     role: "Lead",
-    line: "Interpretability researcher; co-author of NNsight/NDIF and Agents of Chaos",
+    line: "Co-author of Agents of Chaos; leads red-team campaigns — University of Mannheim",
     links: [
       { label: "site", href: "https://jannik-brinkmann.github.io" },
       { label: "scholar", href: "https://scholar.google.com/citations?user=YtdTeaMAAAAJ" },
@@ -169,7 +168,7 @@ export const team: Member[] = [
     id: "alice-rigg",
     name: "Alice Rigg",
     role: "Red-teamer",
-    line: "Mech interp researcher at EleutherAI; co-author of Bilinear MLPs (ICLR 2025)",
+    line: "Red-teamer on the frontier-lab campaigns — EleutherAI",
     links: [
       { label: "site", href: "https://woog97.github.io/" },
       { label: "scholar", href: "https://scholar.google.com/citations?user=9kp2s8UAAAAJ" },
@@ -185,7 +184,7 @@ export const team: Member[] = [
     id: "giordano-rogers",
     name: "Giordano Rogers",
     role: "Red-teamer",
-    line: "Mechanistic interpretability at Northeastern; co-author of Agents of Chaos",
+    line: "Co-author of Agents of Chaos; red-teamer — Northeastern",
     links: [
       { label: "site", href: "https://giordanorogers.github.io/" },
       { label: "scholar", href: "https://scholar.google.com/citations?user=vkcZSNAAAAAJ" },
@@ -213,7 +212,7 @@ export const team: Member[] = [
     id: "antonio-mari",
     name: "Antonio Mari",
     role: "Red-teamer",
-    line: "Sparse autoencoders for diffusion models; EPFL / ETH Zürich",
+    line: "Red-teamer on the frontier-lab campaigns — EPFL / ETH Zürich",
     links: [
       { label: "scholar", href: "https://scholar.google.com/citations?user=VL62tXMAAAAJ" },
       { label: "openreview", href: "https://openreview.net/profile?id=~Antonio_Mari1" },
@@ -225,22 +224,18 @@ export const team: Member[] = [
     ],
   },
   {
-    id: "kevin-rigg",
-    name: "Kevin Rigg",
-    role: "Engineer",
-    /* No public footprint; line confirmed by Alex (2026-06-12). */
-    line: "Engineer — campaign and agent-fleet infrastructure",
-    links: [],
-    ties: [{ node: "frontier-campaigns", source: NDA }],
-  },
-  {
-    id: "baris-gursakal",
-    name: "Baris Gursakal", // spelling confirmed by Alex (2026-06-12)
+    id: "avery-yen",
+    name: "Avery Yen",
     role: "Red-teamer",
-    /* From internal campaign records; publication approved by Alex (2026-06-12). */
-    line: "Red-teamer — persistent multi-day campaigns and behavioral-overlay attacks",
+    /* Coauthor of the paper (Northeastern, footnote 1); ran the Kimi K2.5
+     * case study (Quinn bot). Verified against report.html, 2026-06-13. */
+    line: "Co-author of Agents of Chaos; ran the Kimi K2.5 case study — Northeastern",
     links: [],
-    ties: [{ node: "frontier-campaigns", source: NDA }],
+    ties: [
+      { node: "aoc-paper", role: "co-author", years: "2026", source: AOC },
+      { node: "frontier-campaigns", source: NDA },
+      { node: "northeastern", source: AOC_REPORT },
+    ],
   },
 ];
 
