@@ -6,7 +6,8 @@
  * Every tie carries a `source`: a public URL (linked from the graph's detail
  * panel), "confirmed by the person", or "NDA — engagement record". Every URL
  * below was fetched and the claim read on the page (verification run,
- * 2026-06-12) — EXCEPT rows marked REVIEW, which need Alex or the person.
+ * 2026-06-12); rows without a public source were confirmed by Alex Loftus
+ * (fact review, 2026-06-12).
  * The client lab is never named — "a frontier lab" only (site-wide rule). */
 
 export type NodeType =
@@ -227,19 +228,16 @@ export const team: Member[] = [
     id: "kevin-rigg",
     name: "Kevin Rigg",
     role: "Engineer",
-    /* REVIEW: no public footprint — line + any added ties need
-     * "confirmed by the person" via Alex before merge. */
+    /* No public footprint; line confirmed by Alex (2026-06-12). */
     line: "Engineer — campaign and agent-fleet infrastructure",
     links: [],
     ties: [{ node: "frontier-campaigns", source: NDA }],
   },
   {
     id: "baris-gursakal",
-    /* REVIEW: spelling conflict — this repo's live team.ts says "Gursakal",
-     * internal project records say "Gusakal", the paper has neither. */
-    name: "Baris Gursakal",
+    name: "Baris Gursakal", // spelling confirmed by Alex (2026-06-12)
     role: "Red-teamer",
-    /* REVIEW: drawn from internal campaign records; needs his OK to publish. */
+    /* From internal campaign records; publication approved by Alex (2026-06-12). */
     line: "Red-teamer — persistent multi-day campaigns and behavioral-overlay attacks",
     links: [],
     ties: [{ node: "frontier-campaigns", source: NDA }],
