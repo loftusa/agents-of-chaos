@@ -183,7 +183,7 @@ export const team: Member[] = [
   {
     id: "giordano-rogers",
     name: "Giordano Rogers",
-    role: "Member of Technical Staff",
+    role: "Lead",
     line: "Co-author of Agents of Chaos — Northeastern",
     links: [
       { label: "site", href: "https://giordanorogers.github.io/" },
@@ -211,7 +211,7 @@ export const team: Member[] = [
   {
     id: "antonio-mari",
     name: "Antonio Mari",
-    role: "Member of Technical Staff",
+    role: "Lead",
     line: "Stress-tested the frontier-lab campaigns — EPFL / ETH Zürich",
     links: [
       { label: "scholar", href: "https://scholar.google.com/citations?user=VL62tXMAAAAJ" },
@@ -236,6 +236,23 @@ export const team: Member[] = [
       { node: "frontier-campaigns", source: NDA },
       { node: "northeastern", source: AOC_REPORT },
     ],
+  },
+  {
+    /* Anton Alyakin (handle alyakin314) — distinct person from Antonio Mari
+     * above; both are on the team. Frontier-campaigns tie confirmed by Alex.
+     * Public footprint verified: JHU/NeuroData (Priebe/Vogelstein, 2019–21),
+     * now WashU MD + NYU OLAB CNS AI fellow; "Medical LLMs are Vulnerable to
+     * Data-poisoning Attacks", Nature Medicine 2025. */
+    id: "anton-alyakin",
+    name: "Anton Alyakin",
+    role: "Member of Technical Staff",
+    line: "Data-poisoning attacks on medical LLMs (Nature Medicine) — JHU/NeuroData alum",
+    links: [
+      { label: "site", href: "https://alyakin314.github.io/" },
+      { label: "scholar", href: "https://scholar.google.com/citations?user=5rDtuRIAAAAJ" },
+      { label: "github", href: "https://github.com/alyakin314" },
+    ],
+    ties: [{ node: "frontier-campaigns", source: NDA }],
   },
 ];
 
