@@ -238,10 +238,8 @@ export const team: Member[] = [
     ],
   },
   {
-    /* REVIEW (Alex): two judgment calls to confirm before merge —
-     *  1. He publishes as "Anton Alyakin" (handle alyakin314), not "Antonio".
-     *  2. The frontier-campaigns tie below is assumed from "add him to the team";
-     *     its source is the engagement record you vouch for, like the others.
+    /* Anton Alyakin (handle alyakin314) — distinct person from Antonio Mari
+     * above; both are on the team. Frontier-campaigns tie confirmed by Alex.
      * Public footprint verified: JHU/NeuroData (Priebe/Vogelstein, 2019–21),
      * now WashU MD + NYU OLAB CNS AI fellow; "Medical LLMs are Vulnerable to
      * Data-poisoning Attacks", Nature Medicine 2025. */
