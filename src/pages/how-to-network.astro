@@ -1,0 +1,804 @@
+---
+import Base from "../layouts/Base.astro";
+
+// ───────────────────────────────────────────────────
+// How to Network — an interactive tutorial distilled from four books on
+// negotiation, persuasion, and effectiveness. Content was distilled per-book
+// and adversarially fact-checked for attribution via a multi-agent workflow;
+// it renders mechanically from the data below.
+// ───────────────────────────────────────────────────
+
+const thesis = "Networking is reciprocity you initiate and contribution you lead with: you earn access to people by being a generous, genuinely-interested node in their world, not by extracting value from them. The four books converge on one move — understand the other person's real interest, give before you ask, and make saying yes nearly free — because people decide emotionally (feeling understood, feeling indebted, feeling kinship) and rationalize later. Tactics like labeling, calibrated questions, and warm intros lower friction and make the give-first behavior land, but they never substitute for it; a clever script wrapped around extraction gets detected and burns trust. The whole game is to be effective on purpose — concentrate your limited attention on the few relationships where depth matters and feed them value on a recurring, no-agenda basis, so that when you eventually need something, the debt and the trust already exist.";
+
+type Option = { text: string; correct: boolean; why: string };
+type Drill = { prompt: string; options: Option[] };
+type Principle = {
+  title: string;
+  one_liner: string;
+  draws_from: string;
+  statement: string;
+  apply: string;
+  example: string;
+  pitfall: string;
+  drill: Drill;
+};
+
+const principles: Principle[] = [
+  {
+    "title": "Lead with contribution, not extraction",
+    "one_liner": "Before you ask anyone for anything, find the specific thing you can give them.",
+    "draws_from": "Drucker, The Effective Executive (contribution orientation) + Cialdini, Influence (reciprocity / uninvited first gifts)",
+    "statement": "The defining habit is asking 'What can I contribute?' instead of 'What's in it for me?' An unsolicited, personalized favor given before any ask creates a felt debt the recipient is driven to repay, usually with more than they received. Be the node that consistently moves first, and others want to even the ledger when you eventually reach out.",
+    "apply": "Reframe every outreach from extraction (advice, a job, an intro) to contribution. Lead with a relevant intro, a useful link, a candidate, or a piece of their problem you can solve — tied to their actual work, with no ask attached. Decouple the gift from the request so it stays a gift, not a trade.",
+    "example": "Before asking a senior person for time: 'Saw your talk on X. I work next to a team that solved the exact deployment problem you mentioned at minute 18 — happy to connect you with their lead, if useful.' Weeks later when you ask for 20 minutes, the debt and the goodwill already exist.",
+    "pitfall": "Performative value-add ('Loved your post! Here's an article you'll love') that's transparently a pretext for the ask, or keeping a visible scorecard. An obvious quid pro quo isn't a gift — it triggers no obligation and reads worse than an honest direct ask.",
+    "drill": {
+      "prompt": "You want a senior person at a company you admire to eventually refer you for a role. You've never spoken. What's your first message?",
+      "options": [
+        {
+          "text": "'I'm a big admirer of your work and would love 15 minutes to learn about your path and get any advice you have.'",
+          "correct": false,
+          "why": "Pure extraction — it spends their scarcest resource (time) entirely for your benefit. Drucker's contribution test fails: you've offered nothing they can use, so you're one more person wanting something."
+        },
+        {
+          "text": "Reference a specific problem they've publicly mentioned and offer a concrete, relevant resource or connection that helps with it — no ask attached yet.",
+          "correct": true,
+          "why": "Contribution orientation plus an uninvited first gift: you lead with value tied to their actual results. It earns a reply and lays a foundation of usefulness, so the later ask lands on reciprocity rather than need."
+        },
+        {
+          "text": "Send a polished pitch of your own background and accomplishments so they understand you're worth referring.",
+          "correct": false,
+          "why": "Self-focused, Drucker's exact anti-pattern. Listing what makes you impressive answers 'what's in it for me' — they have no stake in your accomplishments until you've contributed to theirs."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Trade interests, not asks",
+    "one_liner": "Figure out and name their underlying interest before trading surface requests.",
+    "draws_from": "Fisher & Ury, Getting to Yes (interests, not positions)",
+    "statement": "A position is the specific thing someone asks for; an interest is the underlying need driving it. People connect and help each other when actual interests are surfaced and addressed, not when surface requests are swapped. Before you ask for anything, name their interest in the interaction, not just yours — and expose your real interest so they can find a path you didn't see.",
+    "apply": "Instead of leading with a position (a job, an intro, a referral), open by discovering the pain they actually feel. When you want help, say what you're really trying to accomplish so the other person can route you better than your own ask would have.",
+    "example": "Instead of 'Can you refer me to your VP?' (position), say: 'I'm trying to understand how your team evaluates vendors before I waste anyone's time pitching the wrong thing — who actually feels this pain day to day?' This surfaces your interest (a warm, relevant intro) and theirs (not vouching for a bad fit), and produces a better intro than the one you'd have asked for.",
+    "pitfall": "Faking curiosity as a manipulation wrapper around a fixed ask. People detect interest-mining fast; if you've already decided the outcome, 'what do you care about?' reads as a script and burns trust.",
+    "drill": {
+      "prompt": "You meet a senior engineer at a conference whose team you'd love to join. You have 5 minutes. What do you open with?",
+      "options": [
+        {
+          "text": "'I'm really impressed by your team — are you hiring? I'd love to apply.'",
+          "correct": false,
+          "why": "A position (the job) with no understanding of their interest. It puts them in evaluate-and-deflect mode and makes the conversation about your ask in the first sentence."
+        },
+        {
+          "text": "'What's the hardest unsolved problem your team is wrestling with right now — the one that keeps eating sprints?'",
+          "correct": true,
+          "why": "Surfaces their interest (the pain they actually feel), reveals whether you're a fit, and gives you a concrete way to be useful — the real path to being wanted on the team. Interests over positions."
+        },
+        {
+          "text": "'Here's a quick rundown of my background and the stack I know best.'",
+          "correct": false,
+          "why": "Leading with your resume is a thinly disguised position. It assumes the relevant problem is 'evaluate me' rather than discovering their actual need — optimizing for being seen, not for understanding."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Name the feeling first",
+    "one_liner": "Say the unspoken emotion out loud — 'It seems like…' — and watch the guard drop.",
+    "draws_from": "Voss, Never Split the Difference (labeling / tactical empathy + the accusation audit)",
+    "statement": "People decide on emotion and justify with logic, so influence comes from making them feel understood. Verbally name the emotion the other person is likely feeling — 'It seems like…', 'It sounds like…' — without leading with 'I'. Naming a negative emotion defuses it; before an ask, pre-name the objections they're already thinking ('this is a big ask from a near-stranger…') so they dissolve before they harden.",
+    "apply": "Cold outreach carries unspoken friction — they suspect you want something. Label that suspicion out loud to disarm it, and run a quick accusation audit before any real ask: list the negatives they might think, give them an easy out, then make the specific request.",
+    "example": "Reaching out cold: 'It seems like you get a dozen of these a week and most of them want something — this one's different. I read your piece on X and just wanted to tell you which part actually changed how I work.' For an imposition: 'This is a big ask from someone you've met twice, and putting your name on the line for me might feel weird — totally fair. If it's not a fit, just say so.'",
+    "pitfall": "Starting with 'I' or 'I understand how you feel' centers you and reads as a script. And the audit curdles into self-flagellation ('I'm probably bothering you, I'm such a pain…') that fishes for reassurance — name the objection crisply, then move on; don't grovel.",
+    "drill": {
+      "prompt": "At a conference you approach a well-known founder standing alone, looking guarded and checking her phone. You want a real conversation, not a brush-off. What's your opening?",
+      "options": [
+        {
+          "text": "'Hi! Big fan. Can I ask you a few quick questions about how you raised your Series A?'",
+          "correct": false,
+          "why": "Makes an immediate withdrawal — asks her to give before any rapport exists, confirming her guard. No empathy, just extraction."
+        },
+        {
+          "text": "'It looks like you've been getting pulled in a hundred directions today.'",
+          "correct": true,
+          "why": "A label ('It looks like…') that names her likely state without demanding anything. It signals you see her as a person, lowers her guard, and invites a response — the tactical-empathy move that opens real conversation."
+        },
+        {
+          "text": "'I totally understand how exhausting these events are — I feel the same way.'",
+          "correct": false,
+          "why": "Centers you with 'I' and claims to know her feeling rather than offering it for her to confirm. Voss warns 'I understand' triggers resistance because it sounds like a manipulative shortcut."
+        },
+        {
+          "text": "Wait silently nearby, then introduce yourself with your title and company.",
+          "correct": false,
+          "why": "Leading with your résumé makes it about your status, not her experience. It skips the empathy that earns the right to her attention."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Get the 'that's right'",
+    "one_liner": "Summarize their world so well they say 'that's right' — that's the trust unlock.",
+    "draws_from": "Voss, Never Split the Difference ('that's right' vs. 'you're right')",
+    "statement": "Summarize the other person's worldview — their ambition, their frustration, what they're really building — so accurately that they say 'that's right,' the moment of genuine felt understanding. That is the goal, not 'you're right,' which is the dismissive phrase people use to make you stop talking. Earning a 'that's right' converts a transactional contact into someone who trusts you and wants you in their corner.",
+    "apply": "After someone explains a frustration or what they're working toward, reflect back the underlying lesson they took from it — their reasoning, not yours — then let them respond. Only after they feel understood does anything you propose get a fair hearing.",
+    "example": "After a mentor describes career frustration: 'So it sounds like it's not that the work got boring — it's that you built the thing, it succeeded, and now you're stuck maintaining someone else's idea of success instead of starting the next hard thing.' If they say 'that's right,' you've become someone they remember.",
+    "pitfall": "Confusing 'you're right' for a win — it's the placating phrase people use to escape. And don't hijack the spotlight by jumping to your own similar story before they feel heard; the summary must reflect their reasoning, or it's a clever paraphrase that lands flat.",
+    "drill": {
+      "prompt": "You've spent ten minutes listening to a busy potential collaborator explain why his last partnership fell apart. You want to deepen the relationship. What next?",
+      "options": [
+        {
+          "text": "Pitch why working with you would be different and avoid all those problems.",
+          "correct": false,
+          "why": "Jumping to your pitch before he feels understood makes it about you. He hasn't reached 'that's right,' so the pitch lands on a guarded listener."
+        },
+        {
+          "text": "Offer a thoughtful summary of his experience that captures the underlying lesson he took from it, then let him respond.",
+          "correct": true,
+          "why": "A well-crafted summary aims for 'that's right' — the felt understanding that builds trust. Only after that does anything you propose get a fair hearing."
+        },
+        {
+          "text": "Say 'You're absolutely right, partnerships are so hard' and move on to your ask.",
+          "correct": false,
+          "why": "'You're right' is the placating phrase that signals you want to wrap up, not understand — and here it adds nothing."
+        },
+        {
+          "text": "Share your own story of a partnership that failed to show you relate.",
+          "correct": false,
+          "why": "Feels like bonding but hijacks the spotlight back to you before he feels heard. Voss's sequence is to make THEM feel understood first."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Engineer an easy yes",
+    "one_liner": "Make saying yes nearly free — small, specific, and authored by them.",
+    "draws_from": "Fisher & Ury, Getting to Yes (invent options for mutual gain) + Voss (calibrated 'How/What' questions, the No-oriented question) + Cialdini (foot-in-the-door)",
+    "statement": "Don't fight over a fixed pie — expand it. Engineer asks that cost the giver little and benefit you a lot, start with a tiny voluntary commitment that consistency carries forward, and phrase requests so the other person authors the plan. Open-ended 'How' and 'What' questions enlist them as an ally; offering an easy 'No' lowers the stakes and paradoxically restarts engagement.",
+    "apply": "Replace big open-ended asks ('Will you mentor me?', 'a recurring monthly call') with a small specific one plus value back. Let them solve it: 'How would you suggest I get on Sarah's radar?' beats 'Can you intro me?' To re-engage someone who went quiet, invite a No: 'Have you given up on the idea of grabbing coffee?' restarts the thread better than a Yes-hungry bump.",
+    "example": "Instead of 'Can you mentor me?', send: 'I wrote up the three things I learned applying your framework — mind if I send it so you can correct anything I got wrong? 5-minute read.' Tiny cost, real value to them, and an open low-friction channel. For an intro, ask 'How would you suggest I get on her radar?' — often they volunteer the intro, and now it's their idea, so they follow through.",
+    "pitfall": "Two opposite failures. One: over-optimizing for low-cost asks until every interaction is transactional and you never invest real effort yourself. Two: dressing a large ask as small (a '45-minute chat' framed as low-commitment) — the mismatch between framing and real cost gets it ignored. And firing several calibrated questions in a row feels like a deposition.",
+    "drill": {
+      "prompt": "A former colleague is well-connected to a company you'd love to join. You want an intro without putting her on the spot or getting a vague 'I'll see what I can do.' How do you ask?",
+      "options": [
+        {
+          "text": "'Could you introduce me to someone on the hiring team at Acme?'",
+          "correct": false,
+          "why": "A yes/no that's easy to deflect with 'I'll try,' and it forces her to vouch for you before she's chosen to — which feels like pressure."
+        },
+        {
+          "text": "'What do you think would be the best way for me to get noticed at Acme?'",
+          "correct": true,
+          "why": "An open 'What' question that hands her control and invites her to author the plan. People follow through on their own ideas — she'll often offer the intro unprompted, and it's a near-free yes."
+        },
+        {
+          "text": "'Why haven't you mentioned me to anyone at Acme yet?'",
+          "correct": false,
+          "why": "'Why' triggers defensiveness — it sounds like an accusation she's failed you. Voss warns against 'why' for exactly this reason."
+        },
+        {
+          "text": "Ask for a recurring monthly 30-minute call to 'pick her brain.'",
+          "correct": false,
+          "why": "A large, recurring claim on her scarcest resource with vague payoff for her — a fixed-pie ask that's expensive to grant. No mutual gain invented and no small first yes."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Borrow proof and shared identity",
+    "one_liner": "Let a trusted peer vouch for you, and activate the 'we' you already share.",
+    "draws_from": "Cialdini, Influence (social proof + unity) with Liking (genuine similarity, specific praise)",
+    "statement": "When uncertain, people look to what similar others do, and they help in-group members almost reflexively. A warm intro or a shared respected contact transfers credibility you can't self-assert; a real shared identity — alma mater, hometown, former employer, batch, community — turns a stranger into a 'we.' Genuine similarity and specific sincere praise are the multipliers that make every other move land.",
+    "apply": "Let third parties vouch instead of self-asserting: get a real mutual connection to send a brief warm intro (with their buy-in). Surface the genuine 'we' you share, then deepen it by co-creating — collaborate, ask advice, build something together — so the bond outlasts any single favor.",
+    "example": "A cold note opening 'Priya Shah suggested I reach out — she thought you and I should compare notes on supply-chain ML' borrows Priya's credibility instantly. To build something lasting with a fellow alum of your small grad program: lead with the shared program AND propose co-authoring a short piece together — joint work forges a 'we' that outlasts a one-off ask.",
+    "pitfall": "Fabricated or inflated proof — name-dropping people who'd barely recognize you, or borrowing a connection's name without their buy-in; one check-in and your credibility collapses. And hollow tribalism (claiming an in-group you don't belong to, or invoking 'we're both X' purely to extract, then vanishing) permanently brands you as someone who games loyalty.",
+    "drill": {
+      "prompt": "You want a meeting with a director at a company you'd love to join. You have a genuine mutual connection who likes you. What's the strongest play?",
+      "options": [
+        {
+          "text": "Cold-email the director with a polished pitch of your accomplishments and why you'd be a great fit.",
+          "correct": false,
+          "why": "Self-asserted credibility carries no social proof. To a busy stranger, your own claims about yourself are the weakest possible signal."
+        },
+        {
+          "text": "Ask your mutual connection to send a brief warm intro vouching for you, then follow up.",
+          "correct": true,
+          "why": "A respected peer's endorsement is social proof from someone the director already trusts — far more persuasive than self-promotion, and it transfers the connection's credibility to you."
+        },
+        {
+          "text": "Mention the mutual connection's name in a cold email without telling the connection first.",
+          "correct": false,
+          "why": "Borrowing social proof without buy-in is fragile — if the director checks, an unaware or lukewarm reference sinks you. Real endorsement beats implied endorsement."
+        },
+        {
+          "text": "Skip the connection and let your merits speak, to seem independent.",
+          "correct": false,
+          "why": "Forfeits the single strongest trigger available — peer validation from someone like the target. Surfacing the link is exactly what lowers a stranger's guard."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Concentrate on the vital few",
+    "one_liner": "Pick the few relationships that matter, invest deeply, and let the rest go dormant.",
+    "draws_from": "Drucker, The Effective Executive (first things first / setting posteriorities) + Fisher & Ury, Getting to Yes (BATNA — extended here from the negotiating table to your relationship portfolio)",
+    "statement": "Effectiveness is concentrating on the few relationships where depth genuinely matters and having the courage to set posteriorities — to let the second rank go dormant. Treat relationship-building as a protected, recurring time block, not a reactive scramble when you need something. Then borrow one idea from the negotiating table: keep enough alternatives that no single person is load-bearing. A strong BATNA removes neediness, which is exactly what lets you give generously and walk away from bad fits.",
+    "apply": "Pick the three people who matter most this quarter and run one deliberate, sustained sequence with each (useful note now, relevant intro in a month, in-person after). Block a fixed weekly slot for no-agenda contribution. When a key contact goes quiet, lean on your alternatives — pause, advance other paths, and re-engage from strength, not anxiety.",
+    "example": "Rather than firing 30 LinkedIn requests, pick three people and invest sequentially, consciously deprioritizing the other 27. Before a high-stakes coffee, line up two other paths to the same goal — because you don't need this one person, you ask relaxed, generous questions and follow up without anxious over-messaging. If they ghost, you move on cleanly.",
+    "pitfall": "Using 'concentration' to justify a closed clique that never meets anyone new, or letting posteriorities become abrupt ghosting instead of graceful dormancy. And using a strong BATNA as license for arrogance — treating people as interchangeable. The point is to remove neediness, not warmth; alternatives should make you more generous and patient, not coldly transactional.",
+    "drill": {
+      "prompt": "A well-connected person you'd hoped to meet hasn't replied to two emails over three weeks, and you have a long list of others you 'should' stay in touch with. What's the move?",
+      "options": [
+        {
+          "text": "Send a third follow-up emphasizing how much this means to you and that you don't want to miss the chance.",
+          "correct": false,
+          "why": "Signals you have no BATNA — this contact is load-bearing and you're anxious. Neediness repels help; escalating emotional stakes in a one-way thread weakens your position."
+        },
+        {
+          "text": "Pause this thread and advance your other paths to the same goal, while deep-investing in the few relationships with the highest payoff and letting the rest go dormant.",
+          "correct": true,
+          "why": "Leans on your BATNA and sets posteriorities: because you have alternatives, you stop pushing without panic and concentrate attention where depth matters. Re-engage later only with genuinely new value."
+        },
+        {
+          "text": "Send everyone on the list a quick periodic check-in so no relationship goes fully cold.",
+          "correct": false,
+          "why": "Spreads attention so thin that nothing deepens — the opposite of concentration. Drucker calls these generic check-ins low-yield activity that crowds out the high-yield deep investment."
+        },
+        {
+          "text": "Send one last short email with a specific new offer — a relevant article or a useful intro — and a clean close: if no reply, you'll take it as a no.",
+          "correct": false,
+          "why": "Tempting, because it feels disciplined and contribution-first — but it still spends another cycle on a non-responder, and the 'I'll take silence as a no' close quietly pressures. Concentration says just redirect: let the thread go dormant without announcement and put that energy into the vital few and your other paths."
+        }
+      ]
+    }
+  }
+];
+
+const capstone: { scenario: string; steps: { prompt: string; options: Option[] }[] } = {
+  "scenario": "You're trying to break into a tight-knit professional community — a niche field where the real opportunities flow through relationships, not job boards. You recently met someone at a meetup who turns out to be central to that community: she runs the informal group chat, organizes the dinners, and knows everyone worth knowing. You have her email and one genuine point of overlap (you both came up through the same scrappy bootcamp before it was well known). You want to become a real, trusted member of this community over the next few months — not extract one favor. Work the sequence: your opening move, how you frame your first real ask, and how you handle it when the thread goes quiet.",
+  "steps": [
+    {
+      "prompt": "Your opening email, a week after the meetup. What do you send?",
+      "options": [
+        {
+          "text": "'Great meeting you! You clearly know everyone in this space — any chance you could add me to the group chat and intro me around?'",
+          "correct": false,
+          "why": "Pure extraction on a thin relationship, and it asks her to vouch for a near-stranger to her whole community — the thing she'll protect most. You've led with a position and a withdrawal before establishing any contribution or debt."
+        },
+        {
+          "text": "Surface the genuine shared identity ('fellow [bootcamp] alum — back when nobody had heard of it') and attach a specific, useful gift tied to her world (a sharp candidate for a role she's hiring, or a resource on a problem she mentioned), with no ask.",
+          "correct": true,
+          "why": "This activates unity (the shared 'we') and leads with contribution — an uninvited, personalized first gift. It builds the reciprocity and liking that earn access, and decoupling it from any ask keeps it a gift, not a trade. Exactly the give-first foundation."
+        },
+        {
+          "text": "Send a polished note about your background, the bootcamp pedigree, and why you'd be a strong addition to the community.",
+          "correct": false,
+          "why": "Self-assertion carries no social proof and answers 'what's in it for me.' Listing why you're worth including makes you a commodity petitioning for entry, not a node offering value."
+        }
+      ]
+    },
+    {
+      "prompt": "She replied warmly, took the intro you offered, and you've traded a couple of useful notes. Now you actually want into the community's inner channel. How do you frame the ask?",
+      "options": [
+        {
+          "text": "'Could you add me to the group chat?'",
+          "correct": false,
+          "why": "A yes/no that boxes her into a binary and makes her vouch for you to everyone at once before she's chosen to. Easy to defer indefinitely; it does no collaborative work and ignores her interest in protecting the group's signal."
+        },
+        {
+          "text": "Run a brief accusation audit, then ask a calibrated question: 'This might be premature since I'm still new here — totally fine to say so. How would you suggest someone like me start showing up usefully in this group?'",
+          "correct": true,
+          "why": "The audit pre-names her objection (you're new) and gives an easy out, defusing it; the open 'How' question hands her control and lets her author the path in. People follow through on their own plan — she'll often offer the channel herself, on her terms, which is more durable than you asking for it."
+        },
+        {
+          "text": "'I'd really appreciate getting added — it would mean a lot and I promise to add value.'",
+          "correct": false,
+          "why": "Yes-hungry and need-led. Promising future value raises the emotional cost of replying and reads as the neediness that signals no alternatives. It puts the burden on her goodwill instead of inviting her to solve it with you."
+        }
+      ]
+    },
+    {
+      "prompt": "She said 'let me think about the best way to fold you in' — then went quiet for two and a half weeks. You have other routes into this world too. What now?",
+      "options": [
+        {
+          "text": "Send a follow-up stressing how much being part of this community would mean and that you don't want to miss the window.",
+          "correct": false,
+          "why": "Signals she's load-bearing and you're anxious — no BATNA. Escalating emotional stakes in a one-way thread repels help and undoes the relaxed, generous footing you'd built."
+        },
+        {
+          "text": "Pause the thread, advance your other routes into the community, and later re-engage with a No-oriented question plus genuinely new value: 'Have you given up on folding me into the group? No rush either way — separately, I came across something I thought your members would actually use.'",
+          "correct": true,
+          "why": "You lean on your BATNA (pause without panic, work other paths), then invite a 'No' that lets her reassert control and safely reopen the door — and you bring fresh contribution rather than just bumping. Strength plus give-first, exactly the re-engagement move."
+        },
+        {
+          "text": "Confront the silence gently: 'I noticed you never followed through on adding me — did I do something wrong?'",
+          "correct": false,
+          "why": "Fuses the person with the problem and puts her on the defensive about her character over a small lapse. It reads as an accusation, makes her save face rather than help, and ignores that she may simply be busy. Attack the problem, not the person."
+        }
+      ]
+    }
+  ]
+};
+---
+
+<Base
+  title="How to Network — Agents of Chaos"
+  description="An interactive tutorial distilling the most important lessons on networking from Getting to Yes, Never Split the Difference, Influence, and The Effective Executive."
+>
+  <!-- progress rail (wide screens only) -->
+  <nav class="htn-rail" aria-label="Tutorial progress">
+    <ol>
+      {
+        principles.map((p, i) => (
+          <li>
+            <a href={`#p-${i + 1}`} data-rail={i + 1}>
+              <span class="htn-rail-num">{String(i + 1).padStart(2, "0")}</span>
+              <span class="htn-rail-title">{p.title}</span>
+            </a>
+          </li>
+        ))
+      }
+      <li>
+        <a href="#capstone" data-rail="capstone">
+          <span class="htn-rail-num">★</span>
+          <span class="htn-rail-title">Put it together</span>
+        </a>
+      </li>
+    </ol>
+  </nav>
+
+  <div class="reading htn">
+    <div class="page-head">
+      <h1>How to Network</h1>
+      <p class="subtitle">
+        Four books on persuasion, negotiation, and effectiveness — distilled
+        into the moves that actually build relationships.
+      </p>
+    </div>
+
+    <p class="htn-thesis lede">{thesis}</p>
+
+    <p class="htn-howto">
+      <span class="sc ax">How to use this.</span> Read each principle, then make
+      the call in its drill before revealing the answer. Active practice beats
+      passive reading. Your progress fills in as you go.
+    </p>
+
+    <span class="section-label"
+      ><span class="num">books</span>/ the source material</span
+    >
+    <ul class="bare htn-sources">
+      <li><strong>Getting to Yes</strong> — Fisher &amp; Ury · principled negotiation</li>
+      <li><strong>Never Split the Difference</strong> — Chris Voss · tactical empathy</li>
+      <li><strong>Influence</strong> — Robert Cialdini · the principles of persuasion</li>
+      <li><strong>The Effective Executive</strong> — Peter Drucker · effectiveness as a habit</li>
+    </ul>
+
+    {
+      principles.map((p, i) => (
+        <section class="htn-principle" id={`p-${i + 1}`} data-principle={i + 1}>
+          <span class="section-label">
+            <span class="num">{String(i + 1).padStart(2, "0")}</span>/ {p.title}
+          </span>
+          <p class="htn-oneliner">{p.one_liner}</p>
+          <p class="htn-source">{p.draws_from}</p>
+          <p class="htn-statement">{p.statement}</p>
+
+          <details class="htn-reveal">
+            <summary>the move</summary>
+            <p><span class="htn-rlabel">Apply.</span> {p.apply}</p>
+            <p><span class="htn-rlabel">For instance.</span> {p.example}</p>
+          </details>
+          <details class="htn-reveal htn-pitfall">
+            <summary>the trap</summary>
+            <p>{p.pitfall}</p>
+          </details>
+
+          <div class="htn-drill" data-drill>
+            <p class="htn-drill-q">
+              <span class="htn-drill-tag">drill</span>
+              {p.drill.prompt}
+            </p>
+            <div class="htn-opts">
+              {p.drill.options.map((o) => (
+                <button
+                  type="button"
+                  class="htn-opt"
+                  data-correct={o.correct ? "true" : "false"}
+                >
+                  <span class="htn-opt-text">{o.text}</span>
+                  <span class="htn-why">{o.why}</span>
+                </button>
+              ))}
+            </div>
+            <p class="htn-drill-result" aria-live="polite"></p>
+          </div>
+        </section>
+      ))
+    }
+
+    <section class="htn-capstone" id="capstone" data-principle="capstone">
+      <span class="section-label"><span class="num">★</span>/ put it together</span>
+      <h2 class="htn-cap-h">The capstone</h2>
+      <p class="htn-cap-scenario">{capstone.scenario}</p>
+      {
+        capstone.steps.map((s, i) => (
+          <div class="htn-drill" data-drill>
+            <p class="htn-drill-q">
+              <span class="htn-drill-tag">step {i + 1}</span>
+              {s.prompt}
+            </p>
+            <div class="htn-opts">
+              {s.options.map((o) => (
+                <button
+                  type="button"
+                  class="htn-opt"
+                  data-correct={o.correct ? "true" : "false"}
+                >
+                  <span class="htn-opt-text">{o.text}</span>
+                  <span class="htn-why">{o.why}</span>
+                </button>
+              ))}
+            </div>
+            <p class="htn-drill-result" aria-live="polite"></p>
+          </div>
+        ))
+      }
+    </section>
+
+    <p class="htn-close">
+      The through-line of all four books is the same: you don't extract a
+      network, you <em>earn</em> one — by being the generous, genuinely
+      interested, easy-to-say-yes-to person in the room. The tactics only lower
+      the friction.
+    </p>
+  </div>
+</Base>
+
+<style>
+  /* page-local functional color: green = "the right move", used sparingly.
+     brand red (--accent) stays reserved for identity/emphasis, never "wrong". */
+  .htn {
+    --correct: #2f6b3a;
+    --correct-soft: #f0f5f0;
+  }
+
+  .htn-thesis {
+    border-left: 2px solid var(--accent);
+    padding-left: 1rem;
+    font-style: italic;
+    color: var(--fg);
+  }
+
+  .htn-howto {
+    font-size: 0.92rem;
+    color: var(--muted);
+    margin-top: 1.2rem;
+  }
+
+  .htn-sources {
+    margin-bottom: 1rem;
+  }
+  .htn-sources li strong {
+    font-variant: normal;
+    letter-spacing: 0;
+    color: var(--fg);
+  }
+
+  /* ── progress rail ─────────────────────────────────────────────── */
+  .htn-rail {
+    display: none;
+  }
+  @media (min-width: 1080px) {
+    .htn-rail {
+      display: block;
+      position: fixed;
+      top: 50%;
+      left: max(1.5rem, calc((100vw - 1140px) / 2 + 0.5rem));
+      transform: translateY(-50%);
+      z-index: 5;
+    }
+    .htn-rail ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .htn-rail a {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--muted-2);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      font-variant: small-caps;
+      transition: color 0.15s ease;
+    }
+    .htn-rail-num {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      width: 1.4em;
+      text-align: right;
+      color: var(--rule);
+      transition: color 0.15s ease;
+    }
+    .htn-rail-title {
+      max-width: 9ch;
+      opacity: 0;
+      transform: translateX(-3px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .htn-rail:hover .htn-rail-title {
+      opacity: 1;
+      transform: none;
+    }
+    .htn-rail a:hover {
+      color: var(--accent);
+    }
+    .htn-rail a.is-active {
+      color: var(--fg);
+    }
+    .htn-rail a.is-active .htn-rail-num {
+      color: var(--accent);
+    }
+    .htn-rail a.is-done .htn-rail-num {
+      color: var(--correct);
+    }
+  }
+
+  /* ── principle blocks ──────────────────────────────────────────── */
+  .htn-principle {
+    scroll-margin-top: 2rem;
+  }
+  .htn-oneliner {
+    font-size: 1.18rem;
+    line-height: 1.4;
+    margin-bottom: 0.3rem;
+    color: var(--fg);
+  }
+  .htn-source {
+    font-size: 0.74rem;
+    font-variant: small-caps;
+    letter-spacing: 0.1em;
+    color: var(--muted-2);
+    margin-bottom: 0.9rem;
+  }
+  .htn-statement {
+    margin-bottom: 0.9rem;
+  }
+
+  /* native disclosure, styled to the house */
+  .htn-reveal {
+    margin: 0.2rem 0;
+    border-top: 1px solid var(--rule-soft);
+    padding: 0.45rem 0 0.1rem;
+  }
+  .htn-reveal summary {
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.72rem;
+    font-variant: small-caps;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    user-select: none;
+  }
+  .htn-reveal summary::-webkit-details-marker {
+    display: none;
+  }
+  .htn-reveal summary::before {
+    content: "+ ";
+    color: var(--accent);
+  }
+  .htn-reveal[open] summary::before {
+    content: "– ";
+  }
+  .htn-reveal[open] summary {
+    color: var(--accent);
+  }
+  .htn-reveal p {
+    margin: 0.5rem 0 0.2rem;
+    font-size: 0.95rem;
+  }
+  .htn-rlabel {
+    font-variant: small-caps;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    margin-right: 0.25rem;
+  }
+
+  /* ── drills ────────────────────────────────────────────────────── */
+  .htn-drill {
+    margin: 1.4rem 0 0;
+    padding: 1.1rem 1.2rem 1.2rem;
+    border: 1px solid var(--rule-soft);
+    background: #fffffc;
+  }
+  .htn-drill-q {
+    margin-bottom: 0.9rem;
+    font-size: 1rem;
+  }
+  .htn-drill-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-variant: small-caps;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    border: 1px solid var(--rule);
+    padding: 0.05rem 0.4rem;
+    margin-right: 0.55rem;
+    vertical-align: 0.12em;
+  }
+  .htn-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .htn-opt {
+    text-align: left;
+    font-family: var(--font);
+    font-size: 0.95rem;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    padding: 0.65rem 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    line-height: 1.4;
+  }
+  .htn-opt:hover:not([disabled]) {
+    border-color: var(--accent);
+  }
+  .htn-opt[disabled] {
+    cursor: default;
+  }
+  .htn-opt-text::before {
+    content: "○ ";
+    color: var(--muted-2);
+  }
+  /* answered states */
+  .htn-drill.answered .htn-opt {
+    opacity: 0.55;
+  }
+  .htn-drill.answered .htn-opt.is-correct {
+    opacity: 1;
+    border-color: var(--correct);
+    background: var(--correct-soft);
+  }
+  .htn-drill.answered .htn-opt.is-correct .htn-opt-text::before {
+    content: "✓ ";
+    color: var(--correct);
+  }
+  .htn-drill.answered .htn-opt.chosen.is-wrong {
+    opacity: 1;
+    border-color: var(--muted-2);
+  }
+  .htn-drill.answered .htn-opt.chosen.is-wrong .htn-opt-text::before {
+    content: "✗ ";
+    color: var(--muted);
+  }
+  .htn-why {
+    display: none;
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    border-top: 1px dotted var(--rule);
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .htn-drill.answered .htn-opt.is-correct .htn-why,
+  .htn-drill.answered .htn-opt.chosen .htn-why {
+    display: block;
+  }
+  .htn-drill-result {
+    margin: 0.8rem 0 0;
+    min-height: 1rem;
+    font-size: 0.82rem;
+    font-variant: small-caps;
+    letter-spacing: 0.1em;
+    color: var(--muted-2);
+  }
+  .htn-drill.answered.got-it .htn-drill-result {
+    color: var(--correct);
+  }
+  .htn-drill.answered.missed .htn-drill-result {
+    color: var(--accent);
+  }
+
+  /* ── capstone + close ──────────────────────────────────────────── */
+  .htn-capstone {
+    margin-top: 5rem;
+    scroll-margin-top: 2rem;
+  }
+  .htn-cap-h {
+    margin-bottom: 0.8rem;
+  }
+  .htn-cap-scenario {
+    font-style: italic;
+    color: var(--fg);
+    margin-bottom: 0.4rem;
+  }
+  .htn-close {
+    margin-top: 4rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--rule);
+    font-size: 1.05rem;
+    color: var(--fg);
+  }
+
+  @media (max-width: 640px) {
+    .htn-drill {
+      padding: 0.9rem 0.9rem 1rem;
+    }
+  }
+</style>
+
+<script>
+  // One-time lookup of rail links by their data-rail key, shared below.
+  const railByKey = new Map<string, Element>();
+  document
+    .querySelectorAll<HTMLElement>(".htn-rail [data-rail]")
+    .forEach((a) => railByKey.set(a.dataset.rail!, a));
+
+  // Mark a section's rail dot "done" once all of its drills are answered.
+  function markSectionDone(section: HTMLElement) {
+    const done = Array.from(section.querySelectorAll(".htn-drill")).every((d) =>
+      d.classList.contains("answered"),
+    );
+    if (done) railByKey.get(section.dataset.principle!)?.classList.add("is-done");
+  }
+
+  // ── Drill interaction: answer once, reveal all rationales, lock. ──
+  document
+    .querySelectorAll<HTMLElement>(".htn-drill[data-drill]")
+    .forEach((drill) => {
+      const opts = drill.querySelectorAll<HTMLButtonElement>(".htn-opt");
+      const result = drill.querySelector<HTMLElement>(".htn-drill-result");
+      const section = drill.closest<HTMLElement>("[data-principle]");
+      opts.forEach((opt) => {
+        opt.addEventListener("click", () => {
+          if (drill.classList.contains("answered")) return;
+          const isCorrect = opt.dataset.correct === "true";
+          drill.classList.add("answered", isCorrect ? "got-it" : "missed");
+          opt.classList.add("chosen");
+          opts.forEach((o) => {
+            o.setAttribute("disabled", "true");
+            o.classList.add(
+              o.dataset.correct === "true" ? "is-correct" : "is-wrong",
+            );
+          });
+          if (result) {
+            result.textContent = isCorrect
+              ? "— right call"
+              : "— not the strongest move — see why";
+          }
+          if (section) markSectionDone(section);
+        });
+      });
+    });
+
+  // ── Progress rail: highlight whichever section is currently in view. ──
+  const sections = document.querySelectorAll<HTMLElement>("[data-principle]");
+  if (sections.length && "IntersectionObserver" in window) {
+    let activeLink: Element | null = null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const link = railByKey.get(
+            (entry.target as HTMLElement).dataset.principle!,
+          );
+          if (link && link !== activeLink) {
+            activeLink?.classList.remove("is-active");
+            link.classList.add("is-active");
+            activeLink = link;
+          }
+        }
+      },
+      { rootMargin: "-45% 0px -45% 0px" },
+    );
+    sections.forEach((s) => observer.observe(s));
+  }
+</script>
