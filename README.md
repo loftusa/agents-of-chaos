@@ -38,6 +38,33 @@ All commands are run from the root of the project, from a terminal:
 | `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
 
+## 📄 Papers graph (`/papers`)
+
+An interactive relevance graph of papers we're reading. Nodes are papers, edges are
+relevance, and a discovery slider nominates unread papers worth reading next.
+
+- **Edge metric** (`src/scripts/papers-core.js`): `w = 0.65·SPECTER2-cosine + 0.25·shared-references
+  + 0.10·direct-citation`, kNN-sparsified. The embedding term is always defined, so a paper's
+  heaviest edge points at its most-relevant neighbour by construction.
+- **Discovery slider = vertex nomination**: unread candidates (Semantic Scholar recommendations
+  for your set) ranked by nearest-read cosine; the slider reveals a prefix of that ranking.
+- **Add a paper / hover-heat**: a new paper drops in via its own SPECTER2 vector (no re-embedding);
+  hovering shades every node by relevance, scaled relative to the (compressed) cosine band.
+- **Data flow**: visitors load the static `public/papers.json` (no API calls). Adding a paper or
+  expanding the frontier calls `api/paper.js` — a root-level **Vercel serverless function** that
+  proxies Semantic Scholar and holds the API key. If that function is unavailable (e.g. `astro dev`),
+  the client falls back to calling Semantic Scholar directly (anonymous, CORS-enabled).
+
+### Setup / deploy
+
+- **`SEMANTIC_SCHOLAR_API_KEY`** — set this in the Vercel project env (and a local `.env`) so the
+  proxy isn't rate-limited and reliably returns SPECTER2 embeddings. Without it the site still works
+  via the anonymous fallback, just less reliably under load. Request a free key from Semantic Scholar.
+- **Reseed the canonical graph**: edit `SEEDS` in `scripts/seed-papers.mjs`, then
+  `node scripts/seed-papers.mjs` to rewrite `public/papers.json`.
+- **Curate live**: add papers in the page (they persist to `localStorage`), then **export** →
+  commit the downloaded `papers.json` to `public/` to make them part of the public graph.
+
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
