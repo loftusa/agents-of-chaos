@@ -1,0 +1,208 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="Papers — Agents of Chaos"
+  description="An interactive relevance graph of papers we're reading. Nodes are papers, edges are relevance, and a vertex-nomination slider surfaces what to read next."
+>
+  <div class="page-head">
+    <h1>Papers</h1>
+    <p class="subtitle">A relevance graph of what we're reading — and a principled guess at what to read next.</p>
+  </div>
+
+  <div class="reading">
+    <span class="section-label"><span class="num">01</span>/ the graph</span>
+    <p>
+      Every node is a paper; every edge is <b>relevance</b>. The heaviest edge from a
+      paper points at its most-related neighbour, because the weight is led by the cosine
+      of the papers' <a href="https://www.semanticscholar.org/product/api" target="_blank" rel="noopener">SPECTER2</a>
+      embeddings and sharpened by shared references. Hover a paper to light up what it's
+      close to; drag the slider to let the graph nominate unread papers.
+    </p>
+  </div>
+
+  <section class="graph-wrap">
+    <div class="controls">
+      <div class="ctl ctl-slider">
+        <label for="discover">Discover <span class="ctl-k" id="discover-k">—</span></label>
+        <input type="range" id="discover" min="0" max="100" value="0" step="1" />
+        <span class="ctl-hint">unread papers, ranked by relevance to your set</span>
+      </div>
+      <div class="ctl ctl-add">
+        <label for="add-id">Add a paper</label>
+        <div class="add-row">
+          <input type="text" id="add-id" placeholder="arXiv id, DOI, or S2 id" autocomplete="off" spellcheck="false" />
+          <button id="add-btn" type="button">add</button>
+        </div>
+      </div>
+      <div class="ctl ctl-actions">
+        <button id="export-btn" type="button" title="download the current graph as papers.json">export</button>
+        <button id="reset-btn" type="button" title="forget papers you added locally">reset</button>
+      </div>
+    </div>
+    <div id="papers-graph"></div>
+    <div class="graph-foot">
+      <span id="graph-status">loading…</span>
+      <span class="graph-legend">
+        <span class="lg-dot lg-read"></span> in your set
+        <span class="lg-dot lg-ghost"></span> nominated · click to keep
+      </span>
+    </div>
+  </section>
+
+  <div class="reading">
+    <span class="section-label"><span class="num">02</span>/ what to read next</span>
+    <h2>Vertex nomination</h2>
+    <p>
+      Given the papers you've read, which unread papers should you read? That's a named
+      problem — <em>vertex nomination</em> — from the random-graph statistics literature.
+      The principle: a candidate is relevant if it sits close to <em>any</em> paper you've
+      already read. We score each candidate by its nearest-read cosine in embedding space
+      (the simplest consistent member of the spectral-nomination family, robust to a
+      reading list that spans several distinct threads) and reveal the ranking in order.
+      The slider above is a window onto this list; the rows below are the same list, with
+      a relative-relevance score and the paper that pulled each one in.
+    </p>
+    <div id="readlist" class="readlist"></div>
+  </div>
+
+  <div class="reading">
+    <span class="section-label"><span class="num">03</span>/ relatedness</span>
+    <h2>How an edge is defined</h2>
+    <p>
+      Hover any node and the graph shades every other paper by predicted relatedness:
+    </p>
+    <p class="formula">
+      w(i, j) = 0.65 · cos(eᵢ, eⱼ) + 0.25 · shared-references + 0.10 · direct-citation
+    </p>
+    <p>
+      The embedding cosine is the only term that's always defined, so it sets each paper's
+      nearest neighbour; the citation terms can only sharpen the ranking, never invent it.
+      One wrinkle worth being honest about: SPECTER2 cosines between in-field papers sit in
+      a narrow, high band — everything is <em>somewhat</em> similar — so the structure comes
+      from <em>k</em>-nearest-neighbours (scale-invariant) and the hover shading is stretched
+      across the range you're actually looking at, not an absolute scale. It's the difference
+      between "related" and "more related than the rest," which is the question you care about.
+    </p>
+    <p class="src-note">
+      Papers, embeddings, and recommendations from
+      <a href="https://www.semanticscholar.org" target="_blank" rel="noopener">Semantic Scholar</a>.
+      Papers you add live in your browser; <b>export</b> writes a <code>papers.json</code> you can
+      commit to make them part of the public graph.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .graph-wrap {
+    margin: 1.4rem 0 2rem;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 1.1rem 0 0.9rem;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1.6rem 2.2rem;
+    margin-bottom: 0.9rem;
+  }
+  .ctl label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    font-variant: small-caps;
+    color: var(--accent);
+    margin-bottom: 0.35rem;
+  }
+  .ctl-k { color: var(--muted-2); letter-spacing: 0.04em; margin-left: 0.3rem; }
+  .ctl-slider { flex: 1 1 280px; min-width: 240px; }
+  .ctl-slider input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+  .ctl-slider input[type="range"]:disabled { opacity: 0.45; cursor: default; }
+  .ctl-hint { display: block; font-size: 0.72rem; font-style: italic; color: var(--muted); margin-top: 0.2rem; }
+  .add-row { display: flex; gap: 0.4rem; }
+  #add-id {
+    font-family: var(--mono); font-size: 0.8rem; padding: 0.35rem 0.5rem;
+    border: 1px solid var(--rule); background: #fff; color: var(--fg); width: 16rem; max-width: 52vw;
+  }
+  #add-id:focus { outline: none; border-color: var(--accent); }
+  .controls button {
+    font-family: var(--font); font-size: 0.82rem; font-variant: small-caps; letter-spacing: 0.08em;
+    padding: 0.35rem 0.8rem; border: 1px solid var(--accent); background: var(--bg); color: var(--accent);
+    cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
+  }
+  .controls button:hover { background: var(--accent); color: var(--bg); }
+  .ctl-actions { display: flex; gap: 0.5rem; }
+  .ctl-actions button { border-color: var(--rule); color: var(--muted); }
+  .ctl-actions button:hover { border-color: var(--accent); background: var(--bg); color: var(--accent); }
+
+  #papers-graph {
+    position: relative;
+    width: 100%;
+    height: 560px;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(0,0,0,0.035) 1px, transparent 0) 0 0 / 22px 22px,
+      var(--bg);
+    border: 1px solid var(--rule-soft);
+    overflow: hidden;
+  }
+  #papers-graph :global(svg) { display: block; width: 100%; height: 100%; }
+  #papers-graph :global(.node-label) {
+    font-family: var(--font); font-size: 10.5px; fill: #4a463f;
+    paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .graph-tip {
+    position: absolute; display: none; z-index: 5; max-width: 280px;
+    background: #fffdf6; border: 1px solid var(--rule); box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    padding: 0.45rem 0.6rem; font-size: 0.8rem; line-height: 1.3; pointer-events: none;
+  }
+  .graph-tip strong { display: block; color: var(--fg); margin-bottom: 0.15rem; font-weight: 600; }
+  .graph-tip span { color: var(--muted); font-size: 0.72rem; }
+
+  .graph-foot {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    margin-top: 0.55rem; font-size: 0.74rem; color: var(--muted);
+  }
+  #graph-status { font-style: italic; }
+  .graph-legend { display: flex; align-items: center; gap: 0.45rem; }
+  .lg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-left: 0.6rem; }
+  .lg-read { background: #37332e; }
+  .lg-ghost { background: var(--bg); border: 1.3px dashed #b9b09a; }
+
+  .readlist { margin-top: 1rem; }
+  .rl-empty { color: var(--muted); font-style: italic; font-size: 0.92rem; }
+  .rl-row {
+    display: grid; grid-template-columns: 1.4rem 1fr 2.2rem auto; align-items: baseline; gap: 0.6rem;
+    padding: 0.5rem 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .rl-rank { color: var(--muted-2); font-size: 0.8rem; font-variant: small-caps; }
+  .rl-main a { font-size: 0.98rem; }
+  .rl-meta { display: block; font-size: 0.73rem; color: var(--muted); margin-top: 0.1rem; }
+  .rl-rel { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); text-align: right; }
+  .rl-add {
+    font-family: var(--font); font-size: 0.72rem; font-variant: small-caps; letter-spacing: 0.06em;
+    border: 1px solid var(--rule); background: var(--bg); color: var(--muted); padding: 0.2rem 0.5rem; cursor: pointer;
+  }
+  .rl-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  .formula {
+    font-family: var(--mono); font-size: 0.82rem; color: var(--fg);
+    background: var(--accent-soft); border-left: 2px solid var(--accent);
+    padding: 0.55rem 0.8rem; margin: 0.4rem 0 0.9rem; overflow-x: auto;
+  }
+  .src-note { font-size: 0.84rem; color: var(--muted); margin-top: 1.2rem; }
+  .src-note code { font-family: var(--mono); font-size: 0.86em; }
+
+  @media (max-width: 640px) {
+    #papers-graph { height: 440px; }
+    .rl-row { grid-template-columns: 1.2rem 1fr auto; }
+    .rl-rel { display: none; }
+  }
+</style>
+
+<script>
+  import { initPapersGraph } from "../scripts/papers-graph";
+  initPapersGraph();
+</script>
