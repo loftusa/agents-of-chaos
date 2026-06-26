@@ -59,7 +59,11 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   for (const l of links) { adj.get(l.source.id)!.add(l.target.id); adj.get(l.target.id)!.add(l.source.id); }
 
   const r = d3.scaleSqrt().domain([1, 5]).range([4, 16]).clamp(true); // size = intensity
-  const labelled = (d: CNode) => d.intensity >= 5; // only the biggest get a standing label; rest on hover/zoom
+  // semantic zoom: zoomed out only the biggest get a standing label; zoom into a region and the
+  // cutoff drops so more company names appear. Hover/selection still labels the focal node + neighbours.
+  let zoomK = 1, inited = false;
+  const labelCutoff = (k: number) => (k >= 3 ? 0 : k >= 1.8 ? 3 : k >= 1.1 ? 4 : 5);
+  const labelled = (d: CNode) => d.intensity >= labelCutoff(zoomK);
   const confOpacity = (d: CNode) => (d.confidence === "low" ? 0.62 : d.confidence === "medium" ? 0.82 : 1);
 
   /* ---------- svg scaffold (fixed viewBox; CSS scales it) ---------- */
@@ -110,10 +114,13 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   const edgeDash = (l: CLink) =>
     !l.verified ? "2 3" : l.type === "competitor" ? "1 4" : null; // inferred OR competitor reads dashed
 
-  const linkSel = linkG.selectAll<SVGLineElement, CLink>("line").data(links).join("line")
-    .attr("stroke", edgeStroke).attr("stroke-width", edgeWidth)
+  const linkSel = linkG.selectAll<SVGLineElement, CLink>("line.edge").data(links).join("line")
+    .attr("class", "edge").attr("stroke", edgeStroke).attr("stroke-width", edgeWidth)
     .attr("stroke-dasharray", edgeDash).attr("stroke-opacity", 0.5)
     .attr("marker-end", (l) => (l.directed ? "url(#net-arrow)" : null));
+  // wide transparent "hit" lines make the thin edges easy to hover for the connection tooltip
+  const hitSel = linkG.selectAll<SVGLineElement, CLink>("line.hit").data(links).join("line")
+    .attr("class", "hit").attr("stroke", "transparent").attr("stroke-width", 12).style("cursor", "pointer");
 
   // arrowhead for directed business ties
   svg.append("defs").append("marker").attr("id", "net-arrow")
@@ -137,6 +144,7 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
 
   if (!coarse) {
     nodeSel.on("mousemove", nodeTip).on("mouseleave", leaveNode);
+    hitSel.on("mousemove", edgeTip).on("mouseleave", leaveEdge);
     nodeSel.call(d3.drag<SVGGElement, CNode>()
       .on("start", (_ev, d) => { sim.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
       .on("drag", (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
@@ -144,14 +152,20 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   }
 
   function tick() {
-    linkSel.attr("x1", (l) => l.source.x!).attr("y1", (l) => l.source.y!)
-      .attr("x2", (l) => l.target.x!).attr("y2", (l) => l.target.y!);
+    for (const sel of [linkSel, hitSel])
+      sel.attr("x1", (l) => l.source.x!).attr("y1", (l) => l.source.y!)
+        .attr("x2", (l) => l.target.x!).attr("y2", (l) => l.target.y!);
     nodeSel.attr("transform", (d) => `translate(${d.x},${d.y})`);
   }
 
   /* ---------- zoom / pan (fit after settle; double-click re-fits) ---------- */
   const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.2, 6])
-    .on("zoom", (ev) => root.attr("transform", ev.transform.toString()));
+    .on("zoom", (ev) => {
+      root.attr("transform", ev.transform.toString());
+      const k = ev.transform.k;
+      if (inited && labelCutoff(k) !== labelCutoff(zoomK)) { zoomK = k; refreshLabels(); }
+      else zoomK = k;
+    });
   svg.call(zoom).on("dblclick.zoom", null);
   svg.on("dblclick", () => fit(true));
 
@@ -198,7 +212,9 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   function applyFilter() {
     recomputeVisible();
     nodeSel.style("display", (d) => (shown(d) ? null : "none"));
-    linkSel.style("display", (l) => (shown(l.source) && shown(l.target) ? null : "none"));
+    const edgeShown = (l: CLink) => (shown(l.source) && shown(l.target) ? null : "none");
+    linkSel.style("display", edgeShown);
+    hitSel.style("display", edgeShown); // hidden edges must not be hoverable
     applyHighlight();
   }
 
@@ -235,13 +251,15 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
 
   searchEl?.addEventListener("input", applyFilter);
 
-  /* ---------- legend (size + provenance keys; colors are in the chips) ---------- */
+  /* ---------- legend: the minimalist key (color / size / lines) ---------- */
   legendEl.innerHTML =
-    `<span class="net-leg-item"><span class="net-leg-dot" style="width:7px;height:7px"></span>` +
-    `<span class="net-leg-dot" style="width:15px;height:15px"></span> size = agents in production</span>` +
+    `<span class="net-leg-item">color · vertical</span>` +
+    `<span class="net-leg-item"><span class="net-leg-dot" style="width:6px;height:6px"></span>` +
+    `<span class="net-leg-dot" style="width:14px;height:14px"></span> size · agents in production</span>` +
     `<span class="net-leg-item"><span class="net-leg-ln"></span> verified tie</span>` +
-    `<span class="net-leg-item"><span class="net-leg-ln dash"></span> inferred / competitor</span>` +
-    (isPrivate ? `<span class="net-leg-item net-leg-priv">● ring = pipeline stage · private (dev) view</span>` : "");
+    `<span class="net-leg-item"><span class="net-leg-ln dash"></span> inferred</span>` +
+    `<span class="net-leg-item net-leg-dim">zoom in for more names</span>` +
+    (isPrivate ? `<span class="net-leg-item net-leg-priv">● ring · stage (dev)</span>` : "");
 
   /* ---------- highlight ---------- */
   let selected: Sel = null, hover: Sel = null;
@@ -257,9 +275,31 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
     linkSel.attr("stroke-opacity", (l) =>
       !shown(l.source) || !shown(l.target) ? 0
         : !nb ? 0.5 : nb.has(l.source.id) && nb.has(l.target.id) ? 0.9 : 0.04);
+    refreshLabels();
+  }
+  // label visibility = highlight neighbours if any, else the zoom-dependent cutoff (semantic LOD)
+  function refreshLabels() {
+    const nb = neigh(hover ?? selected);
     labelSel.style("display", (d) =>
       !shown(d) ? "none" : nb ? (nb.has(d.id) ? null : "none") : labelled(d) ? null : "none");
   }
+
+  // ---- edge hover: tooltip describing the connection + spotlight the two companies ----
+  let hoverEdge: CLink | null = null;
+  function emphasizeEdge(l: CLink) {
+    const a = l.source.id, b = l.target.id;
+    nodeSel.attr("opacity", (d) => (!shown(d) ? 0 : d.id === a || d.id === b ? 1 : 0.12));
+    linkSel.attr("stroke-opacity", (x) => (x === l ? 0.95 : !shown(x.source) || !shown(x.target) ? 0 : 0.05));
+    labelSel.style("display", (d) => (!shown(d) ? "none" : d.id === a || d.id === b ? null : "none"));
+  }
+  function edgeTip(ev: MouseEvent, l: CLink) {
+    if (hoverEdge !== l) { hoverEdge = l; emphasizeEdge(l); }
+    const arrow = l.directed ? "→" : "↔";
+    const kind = l.type === "shared-investor" ? "shared investor" : l.type;
+    showTip(ev, `<div class="t-name">${esc(l.source.name)} ${arrow} ${esc(l.target.name)}</div>
+      <div class="t-sub">${esc(l.label ?? kind)}${l.verified ? "" : " · inferred"}</div>`);
+  }
+  function leaveEdge() { hoverEdge = null; tooltip.style.opacity = "0"; applyHighlight(); }
 
   function select(sel: Sel) {
     selected = sel; hover = null;
@@ -331,6 +371,10 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   if (focus && byId.has(focus)) select({ id: focus });
   else selectFromHash();
   window.addEventListener("hashchange", selectFromHash);
+
+  // init done: now zoom changes may reveal more labels; sync once to the settled fit scale
+  inited = true;
+  refreshLabels();
 
   // resize: keep viewBox proportional; CSS already scales the svg
   window.addEventListener("resize", () => fit(false));
