@@ -21,7 +21,7 @@ const W_DC = 0.1;
 // seed script can't drift from what toNode reads. (api/paper.js keeps its own copy on
 // purpose: a root Vercel serverless function shouldn't import from src/.)
 export const BATCH_FIELDS =
-  "title,year,authors,externalIds,citationCount,embedding.specter_v2,references.paperId";
+  "title,year,authors,externalIds,citationCount,embedding.specter_v2,references.paperId,abstract,tldr";
 export const REC_FIELDS = "title,year,authors,externalIds,citationCount";
 
 /**
@@ -80,6 +80,10 @@ export function toNode(p) {
     arxiv: ext.ArXiv || null,
     vec: normalize((p.embedding && p.embedding.vector) || null),
     refs,
+    // shown in the click-to-open detail panel (kept on the node so the page needs no
+    // per-view API call); abstract capped to keep the shipped JSON reasonable.
+    tldr: (p.tldr && p.tldr.text) || null,
+    abstract: p.abstract ? p.abstract.slice(0, 1500) : null,
   };
 }
 

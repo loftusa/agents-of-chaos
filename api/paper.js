@@ -18,7 +18,7 @@ const S2 = "https://api.semanticscholar.org";
 // Mirror of papers-core.js BATCH_FIELDS/REC_FIELDS — kept inline on purpose so this
 // root Vercel function has zero src/ imports. Keep the two in sync.
 const BATCH_FIELDS =
-  "title,year,authors,externalIds,citationCount,embedding.specter_v2,references.paperId";
+  "title,year,authors,externalIds,citationCount,embedding.specter_v2,references.paperId,abstract,tldr";
 const REC_FIELDS = "title,year,authors,externalIds,citationCount"; // rec endpoint rejects the embedding field
 
 async function s2(path, init, key, tries = 4) {
