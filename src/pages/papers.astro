@@ -158,6 +158,20 @@ import Base from "../layouts/Base.astro";
   #papers-graph :global(.graph-tip strong) { display: block; color: var(--fg); margin-bottom: 0.15rem; font-weight: 600; }
   #papers-graph :global(.graph-tip span) { color: var(--muted); font-size: 0.72rem; }
 
+  /* edge hover tooltip — what relates two papers */
+  #papers-graph :global(.edge-tip) {
+    position: absolute; display: none; z-index: 7; max-width: 320px; max-height: 62%; overflow-y: auto;
+    background: #fffdf6; border: 1px solid var(--rule); box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    padding: 0.5rem 0.65rem; font-size: 0.78rem; line-height: 1.35; color: var(--fg); pointer-events: none;
+  }
+  #papers-graph :global(.edge-tip .et-pair) { color: var(--fg); margin-bottom: 0.25rem; }
+  #papers-graph :global(.edge-tip .et-w) { color: var(--accent); font-variant: small-caps; letter-spacing: 0.05em; margin-top: 0.1rem; }
+  #papers-graph :global(.edge-tip .et-sub) { color: var(--muted); font-size: 0.72rem; margin-top: 0.15rem; }
+  #papers-graph :global(.edge-tip .et-refs-h) { margin-top: 0.45rem; font-variant: small-caps; letter-spacing: 0.1em; font-size: 0.64rem; color: var(--muted-2); }
+  #papers-graph :global(.edge-tip .et-reflist) { list-style: none; margin: 0.15rem 0 0; padding: 0; }
+  #papers-graph :global(.edge-tip .et-reflist li) { font-size: 0.72rem; padding: 0.18rem 0; border-top: 1px solid var(--rule-soft); }
+  #papers-graph :global(.edge-tip .et-more) { color: var(--muted-2); font-style: italic; }
+
   /* click-to-open paper detail panel (floats in the frame, like the networks map) */
   #papers-graph :global(.paper-detail) {
     position: absolute; top: 12px; right: 12px; z-index: 6;

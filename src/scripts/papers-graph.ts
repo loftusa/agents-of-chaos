@@ -44,7 +44,7 @@ let frontierLoaded = false, frontierBusy = false;
 let editing = false;                  // edit mode: clicking a read node removes it
 const pos = new Map<string, { x: number; y: number }>(); // persist positions across renders
 
-let sim: any, svg: any, g: any, linkG: any, nodeG: any, labelG: any, zoomB: any;
+let sim: any, svg: any, g: any, linkG: any, linkHitG: any, nodeG: any, labelG: any, zoomB: any;
 let W = 800, H = 560;
 const el = (id: string) => document.getElementById(id)!;
 
@@ -188,7 +188,9 @@ function buildSvg(host: HTMLElement) {
   select(host).selectAll("*").remove();
   svg = select(host).append("svg").attr("width", "100%").attr("height", "100%").attr("viewBox", `0 0 ${W} ${H}`);
   g = svg.append("g");
-  linkG = g.append("g").attr("fill", "none");
+  linkG = g.append("g").attr("fill", "none").style("pointer-events", "none");
+  // transparent wide lines over the edges so thin edges are easy to hover for the tooltip
+  linkHitG = g.append("g").attr("fill", "none").attr("stroke", "transparent").attr("stroke-width", 16).style("pointer-events", "stroke").style("cursor", "help");
   nodeG = g.append("g");
   labelG = g.append("g");
 
@@ -236,6 +238,13 @@ function render(alpha = 0.5) {
     .attr("stroke-width", (d: Edge) => lw(d.w))
     .attr("stroke-opacity", (d: Edge) => (d.ghost ? 0.4 : 0.55))
     .attr("stroke-dasharray", (d: Edge) => (d.ghost ? "3 4" : null));
+
+  linkHitG.selectAll<SVGLineElement, Edge>("line")
+    .data(ld, (d: any) => keyOf(d))
+    .join("line")
+    .on("mouseenter", (e: any, d: Edge) => showEdgeTip(d, e))
+    .on("mousemove", (e: any) => positionEdgeTip(edgeTip(), e))
+    .on("mouseleave", hideEdgeTip);
 
   const nodeSel = nodeG.selectAll<SVGGElement, PaperNode>("g.node")
     .data(nd, (d: any) => d.id)
@@ -289,6 +298,9 @@ function firstRender() {
 
 function tick() {
   linkG.selectAll<SVGLineElement, Edge>("line")
+    .attr("x1", (d: any) => d.source.x).attr("y1", (d: any) => d.source.y)
+    .attr("x2", (d: any) => d.target.x).attr("y2", (d: any) => d.target.y);
+  linkHitG.selectAll<SVGLineElement, Edge>("line")
     .attr("x1", (d: any) => d.source.x).attr("y1", (d: any) => d.source.y)
     .attr("x2", (d: any) => d.target.x).attr("y2", (d: any) => d.target.y);
   nodeG.selectAll<SVGGElement, PaperNode>("g.node").attr("transform", (d: PaperNode) => `translate(${d.x},${d.y})`);
@@ -491,6 +503,88 @@ function showDetail(d: PaperNode) {
   (detailEl.querySelector(".pd-close") as HTMLElement).onclick = hideDetail;
 }
 function hideDetail() { if (detailEl) detailEl.style.display = "none"; }
+
+// ── edge hover tooltip ────────────────────────────────────────────────────────────
+// Hovering an edge (via the transparent wide hit-line) explains what relates the two
+// papers. Solid read↔read edges: both titles, the relevance weight, the breakdown, and
+// the actual shared references (titles lazily fetched). Dashed edges: candidate-specific.
+let edgeTipEl: HTMLElement | null = null;
+let openRefs: string[] = []; // shared-ref ids the open tooltip is showing (for async refresh)
+const refTitle = new Map<string, string>(); // ref id → title, lazily fetched + cached
+
+function edgeTip(): HTMLElement {
+  if (!edgeTipEl) { edgeTipEl = document.createElement("div"); edgeTipEl.className = "edge-tip"; el("papers-graph").appendChild(edgeTipEl); }
+  return edgeTipEl;
+}
+function positionEdgeTip(tip: HTMLElement, ev: MouseEvent) {
+  const host = el("papers-graph").getBoundingClientRect();
+  tip.style.left = `${Math.max(6, Math.min(ev.clientX - host.left + 14, host.width - 332))}px`;
+  tip.style.top = `${Math.max(6, Math.min(ev.clientY - host.top + 14, host.height - 80))}px`;
+}
+function dotv(a: Vec, b: Vec) { if (!a || !b) return 0; let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
+
+function showEdgeTip(d: Edge, ev: MouseEvent) {
+  const a = d.source as any, b = d.target as any; // forceLink resolved these to node objects
+  const tip = edgeTip();
+  if (d.ghost) {
+    const cand = a.ghost ? a : b, readEnd = a.ghost ? b : a;
+    const rel = cand.vnScore;
+    const relText = rel != null && rel >= 0 && rel <= 1 ? `relevance ${Math.round(rel * 100)}%` : "recommended by Semantic Scholar";
+    openRefs = [];
+    tip.innerHTML =
+      `<div class="et-pair"><b>${esc(shortTitle(cand))}</b></div>` +
+      `<div class="et-sub">nominated · nearest read paper <b>${esc(shortTitle(readEnd))}</b></div>` +
+      `<div class="et-w">${relText}</div>`;
+  } else {
+    const cos = Math.max(0, dotv(a.vec, b.vec));
+    const bset = new Set<string>(b.refs || []);
+    const shared: string[] = (a.refs || []).filter((id: string) => bset.has(id));
+    const direct = (a.refs || []).includes(b.id) || (b.refs || []).includes(a.id);
+    openRefs = shared;
+    tip.innerHTML =
+      `<div class="et-pair"><b>${esc(shortTitle(a))}</b> ↔ <b>${esc(shortTitle(b))}</b></div>` +
+      `<div class="et-w">relevance ${d.w.toFixed(2)}</div>` +
+      `<div class="et-sub">cosine ${cos.toFixed(2)} · ${shared.length} shared reference${shared.length === 1 ? "" : "s"} · ${direct ? "one cites the other" : "no direct citation"}</div>` +
+      (shared.length ? `<div class="et-refs">${renderSharedRefs(shared)}</div>` : "");
+    if (shared.length) ensureRefTitles(shared);
+  }
+  tip.style.display = "block";
+  positionEdgeTip(tip, ev);
+  highlightEdge(d);
+}
+function hideEdgeTip() {
+  if (edgeTipEl) edgeTipEl.style.display = "none";
+  openRefs = [];
+  linkG.selectAll<SVGLineElement, Edge>("line") // restore default link styling
+    .attr("stroke", (l: Edge) => (l.ghost ? GHOST : "#cdbfae"))
+    .attr("stroke-opacity", (l: Edge) => (l.ghost ? 0.4 : 0.55));
+}
+function highlightEdge(d: Edge) {
+  const k = keyOf(d);
+  linkG.selectAll<SVGLineElement, Edge>("line")
+    .attr("stroke", (l: Edge) => (keyOf(l) === k ? ACCENT : l.ghost ? GHOST : "#cdbfae"))
+    .attr("stroke-opacity", (l: Edge) => (keyOf(l) === k ? 0.95 : l.ghost ? 0.16 : 0.28));
+}
+function renderSharedRefs(ids: string[]): string {
+  const items = ids.slice(0, 8).map((id) => `<li>${esc(refTitle.get(id) || "…")}</li>`).join("");
+  const more = ids.length > 8 ? `<li class="et-more">+${ids.length - 8} more</li>` : "";
+  return `<div class="et-refs-h">shared references</div><ul class="et-reflist">${items}${more}</ul>`;
+}
+async function ensureRefTitles(ids: string[]) {
+  const missing = ids.slice(0, 8).filter((id) => !refTitle.has(id));
+  if (missing.length) {
+    try {
+      const d = await s2({ ids: missing }); // through the proxy (retries on 429) → reliable in prod
+      if (Array.isArray(d)) for (const p of d) if (p && p.paperId) refTitle.set(p.paperId, p.title || "(untitled)");
+    } catch { /* leave as unavailable */ }
+    for (const id of missing) if (!refTitle.has(id)) refTitle.set(id, "(title unavailable)");
+  }
+  // refresh only if the tooltip is still showing this very edge's references
+  if (edgeTipEl && openRefs === ids && edgeTipEl.style.display === "block") {
+    const refsDiv = edgeTipEl.querySelector(".et-refs") as HTMLElement | null;
+    if (refsDiv) refsDiv.innerHTML = renderSharedRefs(ids);
+  }
+}
 
 function mkWidthScale(ld: Edge[]) {
   const ws = ld.map((d) => d.w);
