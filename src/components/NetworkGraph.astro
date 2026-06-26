@@ -69,11 +69,22 @@ const overlayJson = JSON.stringify(overlayEntries).replace(/</g, "\\u003c");
      so these MUST be global. Distinct #net-* ids keep it fully decoupled
      from the /team graph (#graph/#detail). Palette mirrors VERTICALS /
      STAGES in src/data/network-types.ts. */
+  /* /networks is a full-page map: the figure fills the viewport below the nav,
+     full-bleed (escaping the centered 1140px body), no footer (see Base.astro). */
+  body.full-page { overflow-x: hidden; }
   .net-figure {
-    margin: 1.4rem 0 1rem;
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-    padding: 0.9rem 0 0.6rem;
+    margin: 0;
+    border: none;
+    padding: 0.6rem 0 0;
+    /* fill the viewport below the masthead (body top-padding 2rem + masthead ~2.1rem) */
+    height: calc(100vh - 4.25rem);
+    display: flex;
+    flex-direction: column;
+    /* full-bleed width */
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
   }
 
   .net-controls {
@@ -81,7 +92,7 @@ const overlayJson = JSON.stringify(overlayEntries).replace(/</g, "\\u003c");
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem 0.7rem;
-    margin-bottom: 0.7rem;
+    padding: 0 1.5rem 0.6rem;
   }
   #net-search {
     font-family: var(--font);
@@ -119,9 +130,9 @@ const overlayJson = JSON.stringify(overlayEntries).replace(/</g, "\\u003c");
   .net-chip.on { opacity: 1; color: var(--fg); border-color: var(--muted-2); }
   .net-chip-warm.on { color: var(--accent); border-color: var(--accent); }
 
-  .net-stage { position: relative; }
+  .net-stage { position: relative; flex: 1 1 auto; min-height: 0; }
   #net-graph {
-    height: clamp(520px, 72vh, 760px);
+    height: 100%;
     cursor: grab;
     overflow: hidden;
   }
@@ -175,8 +186,8 @@ const overlayJson = JSON.stringify(overlayEntries).replace(/</g, "\\u003c");
 
   /* legend (size + provenance keys) */
   #net-legend {
-    display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem;
-    padding-top: 0.6rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.2rem;
+    flex: none; padding: 0.45rem 1.5rem;
     font-size: 0.72rem; color: var(--muted);
   }
   .net-leg-item { display: inline-flex; align-items: center; gap: 6px; }
