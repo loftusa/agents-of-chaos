@@ -20,6 +20,7 @@ type Vec = number[] | null;
 interface PaperNode {
   id: string; title: string; authors: string[]; year: number | null;
   citationCount: number; url: string; arxiv: string | null; vec: Vec; refs: string[];
+  tldr?: string | null; abstract?: string | null;
   ghost?: boolean; vnScore?: number; nearestId?: string | null;
   x?: number; y?: number; fx?: number | null; fy?: number | null;
 }
@@ -217,7 +218,7 @@ function render(alpha = 0.5) {
         .on("click", (_e: any, d: PaperNode) => {
           if (d.ghost) promote(d);
           else if (editing) removePaper(d.id);
-          else window.open(d.url, "_blank");
+          else showDetail(d);
         });
       return gg;
     });
@@ -349,6 +350,7 @@ function addNode(node: PaperNode) {
 function removePaper(id: string) {
   read = read.filter((n) => n.id !== id);
   pos.delete(id);
+  hideDetail();
   if (baked.some((n) => n.id === id)) { const rm = loadRemoved(); rm.add(id); saveRemoved(rm); }
   saveAdds(localAdds());
   rebuildEdges();
@@ -413,6 +415,32 @@ function showTip(d: PaperNode) {
 }
 function hideTip() { if (tipEl) tipEl.style.display = "none"; }
 function zoomTransform(): any { const t = (g.node() as any).__zoom || zoomIdentity; return t; }
+
+// Clicking a paper opens a persistent detail panel (à la alex-loftus.com/networks) — not a
+// raw link. Shows title/authors/year/citations + a lazily-fetched TL;DR/abstract, and a link
+// out. Stays until you close it (✕) or click another paper.
+let detailEl: HTMLElement | null = null;
+function showDetail(d: PaperNode) {
+  if (!detailEl) {
+    detailEl = document.createElement("div");
+    detailEl.className = "paper-detail";
+    el("papers-graph").appendChild(detailEl);
+  }
+  const idLabel = d.arxiv ? `arXiv:${d.arxiv}` : "Semantic Scholar";
+  let summary = "<i>No summary available.</i>";
+  if (d.tldr) summary = `<b>TL;DR.</b> ${esc(d.tldr)}` + (d.abstract ? `<span class="pd-full">${esc(d.abstract)}</span>` : "");
+  else if (d.abstract) summary = esc(d.abstract);
+  detailEl.innerHTML =
+    `<span class="pd-close" title="close">✕</span>` +
+    `<a class="pd-title" href="${d.url}" target="_blank" rel="noopener">${esc(d.title)}</a>` +
+    `<div class="pd-meta">${esc(d.authors.join(", "))}${d.authors.length >= 6 ? " et al." : ""}</div>` +
+    `<div class="pd-stats">${d.year ?? ""} · ${d.citationCount} citations · ` +
+      `<a href="${d.url}" target="_blank" rel="noopener">${idLabel} ↗</a></div>` +
+    `<div class="pd-abstract">${summary}</div>`;
+  detailEl.style.display = "block";
+  (detailEl.querySelector(".pd-close") as HTMLElement).onclick = hideDetail;
+}
+function hideDetail() { if (detailEl) detailEl.style.display = "none"; }
 
 function mkWidthScale(ld: Edge[]) {
   const ws = ld.map((d) => d.w);
