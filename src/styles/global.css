@@ -28,6 +28,7 @@
   --mono: "Agents Sans", "SFMono-Regular", "Menlo", "Consolas", monospace;
   --copy-size: clamp(0.8rem, 0.75rem + 0.16vw, 0.9rem);
   --copy-line: 1.74;
+  --page-pad: clamp(1rem, 2.8vw, 2.5rem);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,7 +51,7 @@ body {
   font-size: var(--copy-size);
   line-height: var(--copy-line);
   letter-spacing: 0.055em;
-  padding: 1rem clamp(1rem, 2.8vw, 2.5rem) 0;
+  padding: 1rem var(--page-pad) 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
@@ -88,12 +89,12 @@ em { color: var(--fg); }
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  width: min(100%, 1180px);
-  min-height: 4.6rem;
-  margin: 0 auto;
-  padding: 0.8rem clamp(0.9rem, 2vw, 1.35rem);
-  border: 1px solid var(--rule-soft);
-  background: color-mix(in srgb, var(--bg) 91%, transparent);
+  width: calc(100% + (var(--page-pad) * 2));
+  min-height: 4rem;
+  margin: 0 calc(var(--page-pad) * -1);
+  padding: 0.7rem var(--page-pad);
+  border-bottom: 1px solid var(--rule-soft);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
   backdrop-filter: blur(16px);
 }
 
@@ -108,7 +109,7 @@ em { color: var(--fg); }
 
 .wordmark-logo {
   display: block;
-  width: clamp(8.6rem, 16vw, 12.4rem);
+  width: clamp(4.4rem, 8vw, 6rem);
   height: auto;
 }
 
@@ -852,7 +853,9 @@ input[type="range"] { accent-color: var(--accent); }
 }
 
 @media (max-width: 680px) {
-  body { padding: 0.75rem 1rem 0; font-size: 0.96rem; }
+  :root { --page-pad: 1rem; }
+
+  body { padding-top: 0.75rem; font-size: 0.96rem; }
 
   .masthead {
     position: static;
@@ -871,7 +874,7 @@ input[type="range"] { accent-color: var(--accent); }
     letter-spacing: 0.14em;
   }
 
-  .wordmark-logo { width: clamp(8.2rem, 38vw, 11rem); }
+  .wordmark-logo { width: clamp(4.4rem, 22vw, 5.8rem); }
 
   .hero {
     padding: 2.6rem 0 3rem;
