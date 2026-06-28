@@ -37,6 +37,15 @@ const overlayJson = JSON.stringify(overlayEntries).replace(/</g, "\\u003c");
     />
     <div id="net-verticals" class="net-chips" aria-label="filter by vertical"></div>
     {isPrivate && <div id="net-stages" class="net-chips net-chips-priv" aria-label="filter by pipeline stage"></div>}
+    <button
+      id="net-download"
+      class="net-chip net-action"
+      type="button"
+      aria-label="download the current view as a PNG image"
+      title="download the current view as a PNG image"
+    >
+      <span class="ic" aria-hidden="true">↓</span> download
+    </button>
   </div>
 
   <div class="net-stage">
@@ -135,6 +144,13 @@ const overlayJson = JSON.stringify(overlayEntries).replace(/</g, "\\u003c");
     font-variant: small-caps; letter-spacing: 0.06em; margin-right: 0.2rem;
   }
   .net-chip-toggle:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  /* "download" — a quiet utility action, pushed to the right edge of the controls row */
+  .net-action {
+    opacity: 1; color: var(--muted-2); border-color: var(--rule-soft);
+    margin-left: auto; font-variant: small-caps; letter-spacing: 0.06em;
+  }
+  .net-action:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .net-action .ic { font-variant: normal; }
 
   .net-stage { position: relative; flex: 1 1 auto; min-height: 0; }
   #net-graph {

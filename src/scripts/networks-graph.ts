@@ -270,6 +270,61 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
 
   searchEl?.addEventListener("input", applyFilter);
 
+  /* ---------- download: rasterize the current view to a PNG ----------
+   * What-you-see-is-what-you-get: current pan/zoom, filters, and decluttered
+   * labels all carry over (they're inline display:none / attributes on the
+   * elements). The catch: .net-label gets its fill/halo/anchor from the page's
+   * external CSS, which a rasterized SVG can't see — so we clone the svg, inject
+   * those rules as an internal <style>, lay a cream background behind it, then
+   * draw it onto a 2× canvas for a crisp, shareable image. No external refs →
+   * the canvas isn't tainted → toBlob() works. */
+  const downloadBtn = document.getElementById("net-download") as HTMLButtonElement | null;
+  function downloadPng() {
+    const SVGNS = "http://www.w3.org/2000/svg";
+    const clone = svg.node()!.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute("xmlns", SVGNS);
+    clone.setAttribute("width", String(W));
+    clone.setAttribute("height", String(H));
+
+    // labels live on external CSS classes the rasterizer can't reach — inline them
+    const style = document.createElementNS(SVGNS, "style");
+    style.textContent =
+      `text{font-family:Palatino,"Palatino Linotype","Book Antiqua",Georgia,serif}` +
+      `.net-label{fill:#11100f;text-anchor:middle;paint-order:stroke;` +
+      `stroke:${HALO};stroke-width:3px;stroke-linejoin:round}`;
+    // cream page background, behind everything
+    const bg = document.createElementNS(SVGNS, "rect");
+    bg.setAttribute("x", "0"); bg.setAttribute("y", "0");
+    bg.setAttribute("width", String(W)); bg.setAttribute("height", String(H));
+    bg.setAttribute("fill", HALO);
+    clone.insertBefore(bg, clone.firstChild);
+    clone.insertBefore(style, clone.firstChild);
+
+    const xml = new XMLSerializer().serializeToString(clone);
+    const svgUrl = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+    const img = new Image();
+    img.onload = () => {
+      const scale = 2; // crisp on retina / when scaled up in a deck
+      const canvas = document.createElement("canvas");
+      canvas.width = W * scale; canvas.height = H * scale;
+      const ctx = canvas.getContext("2d")!;
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, W, H);
+      URL.revokeObjectURL(svgUrl);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "agents-of-chaos-networks.png";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }, "image/png");
+    };
+    img.onerror = () => URL.revokeObjectURL(svgUrl);
+    img.src = svgUrl;
+  }
+  downloadBtn?.addEventListener("click", downloadPng);
+
   /* ---------- legend: the minimalist key (color / size / lines) ---------- */
   legendEl.innerHTML =
     `<span class="net-leg-item">color · vertical</span>` +
