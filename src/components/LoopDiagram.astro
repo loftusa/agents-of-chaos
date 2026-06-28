@@ -1,10 +1,10 @@
 ---
-// Campaign loop: build environment → red-teaming → findings → back into build.
+// Campaign loop: model environment → adversarial testing → evidence → back into model.
 ---
 
 <figure
   class="loop-diagram"
-  aria-label="Campaign loop: build environment, red-team, findings, fed back into the build"
+  aria-label="Campaign loop: model environment, adversarial testing, evidence and fixes"
 >
   <div class="loop-svg-wrap">
     <svg
@@ -34,25 +34,25 @@
     </svg>
 
     <div class="loop-label" style="top: 17.5%; left: 50%;">
-      <span class="t">Build Environment</span>
-      <span class="s">custom infrastructure and agent harnesses</span>
+      <span class="t">Model Environment</span>
+      <span class="s">production workflows, tools, and incentives</span>
     </div>
 
     <div class="loop-label" style="top: 78%; left: 78%;">
-      <span class="t">Red-Teaming</span>
-      <span class="s">Stress-test the agents under heat</span>
+      <span class="t">Adversarial Testing</span>
+      <span class="s">agent populations under operational pressure</span>
     </div>
 
     <div class="loop-label" style="top: 78%; left: 22%;">
-      <span class="t">Findings</span>
-      <span class="s">surfaced, reported on, and fed back into the build</span>
+      <span class="t">Evidence & Fixes</span>
+      <span class="s">reported, prioritised, and fed back into the system</span>
     </div>
 
     <div class="loop-center">Iterative feedback loop</div>
   </div>
   <figcaption>
     outputs:<strong>&nbsp;safety reports</strong> · <strong
-      >testing infrastructure · agent runtimes</strong
+      >test infrastructure · agent runtimes</strong
     >
   </figcaption>
 </figure>

@@ -26,8 +26,8 @@
   --font: "Agents Sans", "Helvetica Neue", Arial, sans-serif;
   --display: "Agents Sans", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   --mono: "Agents Sans", "SFMono-Regular", "Menlo", "Consolas", monospace;
-  --copy-size: clamp(0.82rem, 0.77rem + 0.18vw, 0.94rem);
-  --copy-line: 1.78;
+  --copy-size: clamp(0.8rem, 0.75rem + 0.16vw, 0.9rem);
+  --copy-line: 1.74;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,7 +49,7 @@ body {
   font-family: var(--font);
   font-size: var(--copy-size);
   line-height: var(--copy-line);
-  letter-spacing: 0.07em;
+  letter-spacing: 0.055em;
   padding: 1rem clamp(1rem, 2.8vw, 2.5rem) 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
@@ -70,7 +70,7 @@ a:hover { text-decoration: underline; }
 p {
   color: var(--prose);
   margin-bottom: 0.82rem;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.055em;
 }
 strong { font-weight: 700; color: var(--prose-strong); }
 em { color: var(--fg); }
@@ -187,7 +187,7 @@ em { color: var(--fg); }
   position: relative;
   z-index: 1;
   min-width: 0;
-  width: min(100%, 760px);
+  width: min(100%, 820px);
 }
 
 .kicker,
@@ -209,9 +209,9 @@ em { color: var(--fg); }
 
 .hero-title-logo {
   display: block;
-  width: min(100%, clamp(19rem, 46vw, 34rem));
+  width: min(100%, clamp(20rem, 44vw, 33rem));
   height: auto;
-  margin: 0 0 clamp(1.2rem, 2.4vw, 1.8rem);
+  margin: 0 0 clamp(1rem, 2vw, 1.5rem);
   filter: drop-shadow(0 0 22px rgba(247, 243, 234, 0.1));
 }
 
@@ -229,7 +229,7 @@ em { color: var(--fg); }
 }
 
 .hero .subtitle {
-  margin: 1.45rem 0 0.3rem;
+  margin: 1.1rem 0 0.35rem;
   color: var(--fg);
   font-family: var(--display);
   font-size: clamp(0.78rem, 1.25vw, 1rem);
@@ -239,10 +239,30 @@ em { color: var(--fg); }
 }
 
 .hero-summary {
-  max-width: 36rem;
+  max-width: 42rem;
   color: var(--muted);
-  font-size: clamp(0.86rem, 1.12vw, 1rem);
-  line-height: 1.75;
+  font-size: clamp(0.84rem, 1.05vw, 0.96rem);
+  line-height: 1.7;
+}
+
+.hero-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  width: min(100%, 42rem);
+  margin-top: 1.45rem;
+}
+
+.hero-meta span {
+  min-height: 3.1rem;
+  padding: 0.72rem 0 0;
+  border-top: 1px solid var(--rule-soft);
+  color: var(--muted);
+  font-family: var(--display);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  line-height: 1.45;
+  text-transform: uppercase;
 }
 
 .hero-nav {
@@ -292,24 +312,28 @@ em { color: var(--fg); }
 }
 
 .signal-board div {
-  padding: clamp(1.1rem, 2.5vw, 1.8rem);
-  min-height: 12rem;
+  padding: clamp(1.25rem, 2.6vw, 1.9rem);
+  min-height: 11.5rem;
 }
 
 .signal-board div + div { border-left: 1px solid var(--rule-soft); }
 
 .signal-board h2 {
-  margin: 1.4rem 0 0.7rem;
+  margin: 1.35rem 0 0.75rem;
   color: var(--fg);
   font-family: var(--display);
-  font-size: clamp(0.82rem, 1.25vw, 1.08rem);
+  font-size: clamp(0.78rem, 1.08vw, 0.98rem);
   font-weight: 400;
   letter-spacing: 0.14em;
   line-height: 1.12;
   text-transform: uppercase;
 }
 
-.signal-board p { color: var(--muted); margin: 0; }
+.signal-board p {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.62;
+}
 
 .section-label {
   margin: 4.2rem 0 0.85rem;
@@ -339,13 +363,23 @@ h2 {
 .intro,
 .lede {
   color: var(--muted);
-  font-size: clamp(0.88rem, 1.16vw, 1.04rem);
-  line-height: 1.72;
+  font-size: clamp(0.86rem, 1.08vw, 1rem);
+  line-height: 1.7;
 }
 
 .intro b,
 .lede b {
   color: var(--fg);
+}
+
+.intro.closer {
+  margin-top: 1.2rem;
+  color: var(--fg);
+  font-family: var(--display);
+  font-size: clamp(0.98rem, 1.55vw, 1.32rem);
+  letter-spacing: 0.12em;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .drop {
@@ -467,6 +501,7 @@ h2 {
   display: block;
   color: var(--muted);
   font-size: clamp(0.56rem, 1.1vw, 0.68rem);
+  max-width: 22ch;
 }
 
 .loop-center {
@@ -490,6 +525,22 @@ h2 {
 .loop-diagram figcaption strong {
   color: var(--fg);
   font-weight: 700;
+}
+
+.what-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.what-list p {
+  margin: 0;
+  padding: 0 0 0 1rem;
+  border-left: 1px solid var(--rule-soft);
+}
+
+.what-list strong {
+  color: var(--prose-strong);
 }
 
 ul.bare { list-style: none; padding-left: 0; }
@@ -823,6 +874,8 @@ input[type="range"] { accent-color: var(--accent); }
   }
 
   .hero-title-logo { width: min(100%, 24rem); }
+  .hero-meta { grid-template-columns: 1fr; }
+  .hero-meta span { min-height: auto; padding-top: 0.55rem; }
 
   .drop { font-size: 3rem; }
   .people { grid-template-columns: 1fr; }
