@@ -59,11 +59,11 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   for (const l of links) { adj.get(l.source.id)!.add(l.target.id); adj.get(l.target.id)!.add(l.source.id); }
 
   const r = d3.scaleSqrt().domain([1, 5]).range([4, 16]).clamp(true); // size = intensity
-  // semantic zoom: zoomed out only the biggest get a standing label; zoom into a region and the
-  // cutoff drops so more company names appear. Hover/selection still labels the focal node + neighbours.
-  let zoomK = 1, inited = false;
-  const labelCutoff = (k: number) => (k >= 3 ? 0 : k >= 1.8 ? 3 : k >= 1.1 ? 4 : 5);
-  const labelled = (d: CNode) => d.intensity >= labelCutoff(zoomK);
+  // labels are decluttered dynamically (see refreshLabels): held at a constant on-screen size and
+  // greedily placed by priority so none overlap. Zooming into a region spaces nodes apart on screen,
+  // so more non-overlapping names appear — a dynamic label-spacing mechanism rather than a fixed cutoff.
+  const BASE_LABEL = 11; // px — constant on-screen label size
+  let inited = false;
   const confOpacity = (d: CNode) => (d.confidence === "low" ? 0.62 : d.confidence === "medium" ? 0.82 : 1);
 
   /* ---------- svg scaffold (fixed viewBox; CSS scales it) ---------- */
@@ -138,8 +138,12 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
     .attr("stroke", (d) => ringColor(d.id) ?? HALO)
     .attr("stroke-width", (d) => (ringColor(d.id) ? 2.5 : 1.4));
   nodeSel.append("text").attr("class", "net-label").attr("y", (d) => -r(d.intensity) - 4)
-    .text((d) => d.name).style("display", (d) => (labelled(d) ? null : "none"));
-  const labelSel = nodeSel.select<SVGTextElement>("text.net-label"); // cache: reused on every highlight
+    .text((d) => d.name);
+  const labelSel = nodeSel.select<SVGTextElement>("text.net-label"); // cache: reused on every refresh
+  // measure each label's on-screen width once (at base size) for collision; priority = bigger first
+  const labelW = new Map<string, number>();
+  labelSel.each(function (d) { labelW.set(d.id, (this as SVGTextElement).getBBox().width); });
+  const labelOrder = [...nodes].sort((a, b) => b.intensity - a.intensity || (a.id < b.id ? -1 : 1));
   nodeSel.on("click", (ev: MouseEvent, d) => { ev.stopPropagation(); select({ id: d.id }); });
 
   if (!coarse) {
@@ -162,9 +166,7 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.2, 6])
     .on("zoom", (ev) => {
       root.attr("transform", ev.transform.toString());
-      const k = ev.transform.k;
-      if (inited && labelCutoff(k) !== labelCutoff(zoomK)) { zoomK = k; refreshLabels(); }
-      else zoomK = k;
+      if (inited) scheduleLabels(); // re-declutter as node spacing on screen changes
     });
   svg.call(zoom).on("dblclick.zoom", null);
   svg.on("dblclick", () => fit(true));
@@ -221,21 +223,38 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   // build a row of toggle-chips over {id,label,color} items, each toggling membership in `active`
   function buildChips<T extends string>(
     container: HTMLElement, items: { id: T; label: string; color: string }[], active: Set<T>,
+    onChange?: () => void,
   ): void {
     for (const it of items) {
       const chip = document.createElement("button");
       chip.className = "net-chip on";
+      chip.dataset.id = it.id; // lets the "hide/show all" button resync chip states
       chip.innerHTML = `<span class="sw" style="background:${it.color}"></span>${esc(it.label)}`;
       chip.addEventListener("click", () => {
         active.has(it.id) ? active.delete(it.id) : active.add(it.id);
         chip.classList.toggle("on", active.has(it.id));
         applyFilter();
+        onChange?.();
       });
       container.appendChild(chip);
     }
   }
 
-  buildChips(vchips, present, activeVerticals);
+  // "hide all / show all" — blank out every category at once (and restore them)
+  const allBtn = document.createElement("button");
+  allBtn.className = "net-chip net-chip-toggle";
+  const refreshAllBtn = () => { allBtn.textContent = activeVerticals.size === 0 ? "show all" : "hide all"; };
+  allBtn.addEventListener("click", () => {
+    if (activeVerticals.size === 0) present.forEach((v) => activeVerticals.add(v.id));
+    else activeVerticals.clear();
+    vchips.querySelectorAll<HTMLElement>(".net-chip[data-id]")
+      .forEach((c) => c.classList.toggle("on", activeVerticals.has(c.dataset.id as Vertical)));
+    refreshAllBtn();
+    applyFilter();
+  });
+  vchips.appendChild(allBtn);
+  refreshAllBtn();
+  buildChips(vchips, present, activeVerticals, refreshAllBtn);
   if (isPrivate && schips) {
     const warmChip = document.createElement("button");
     warmChip.className = "net-chip net-chip-warm";
@@ -250,6 +269,61 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
   }
 
   searchEl?.addEventListener("input", applyFilter);
+
+  /* ---------- download: rasterize the current view to a PNG ----------
+   * What-you-see-is-what-you-get: current pan/zoom, filters, and decluttered
+   * labels all carry over (they're inline display:none / attributes on the
+   * elements). The catch: .net-label gets its fill/halo/anchor from the page's
+   * external CSS, which a rasterized SVG can't see — so we clone the svg, inject
+   * those rules as an internal <style>, lay a cream background behind it, then
+   * draw it onto a 2× canvas for a crisp, shareable image. No external refs →
+   * the canvas isn't tainted → toBlob() works. */
+  const downloadBtn = document.getElementById("net-download") as HTMLButtonElement | null;
+  function downloadPng() {
+    const SVGNS = "http://www.w3.org/2000/svg";
+    const clone = svg.node()!.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute("xmlns", SVGNS);
+    clone.setAttribute("width", String(W));
+    clone.setAttribute("height", String(H));
+
+    // labels live on external CSS classes the rasterizer can't reach — inline them
+    const style = document.createElementNS(SVGNS, "style");
+    style.textContent =
+      `text{font-family:Palatino,"Palatino Linotype","Book Antiqua",Georgia,serif}` +
+      `.net-label{fill:#11100f;text-anchor:middle;paint-order:stroke;` +
+      `stroke:${HALO};stroke-width:3px;stroke-linejoin:round}`;
+    // cream page background, behind everything
+    const bg = document.createElementNS(SVGNS, "rect");
+    bg.setAttribute("x", "0"); bg.setAttribute("y", "0");
+    bg.setAttribute("width", String(W)); bg.setAttribute("height", String(H));
+    bg.setAttribute("fill", HALO);
+    clone.insertBefore(bg, clone.firstChild);
+    clone.insertBefore(style, clone.firstChild);
+
+    const xml = new XMLSerializer().serializeToString(clone);
+    const svgUrl = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+    const img = new Image();
+    img.onload = () => {
+      const scale = 2; // crisp on retina / when scaled up in a deck
+      const canvas = document.createElement("canvas");
+      canvas.width = W * scale; canvas.height = H * scale;
+      const ctx = canvas.getContext("2d")!;
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, W, H);
+      URL.revokeObjectURL(svgUrl);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "agents-of-chaos-networks.png";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }, "image/png");
+    };
+    img.onerror = () => URL.revokeObjectURL(svgUrl);
+    img.src = svgUrl;
+  }
+  downloadBtn?.addEventListener("click", downloadPng);
 
   /* ---------- legend: the minimalist key (color / size / lines) ---------- */
   legendEl.innerHTML =
@@ -277,11 +351,34 @@ export function initNetworkGraph(overlayEntries: PrivateOverlayEntry[] = []): vo
         : !nb ? 0.5 : nb.has(l.source.id) && nb.has(l.target.id) ? 0.9 : 0.04);
     refreshLabels();
   }
-  // label visibility = highlight neighbours if any, else the zoom-dependent cutoff (semantic LOD)
+  // Greedy label declutter: hold labels at a constant on-screen size and place them by priority
+  // (bigger first), skipping any whose screen box overlaps one already placed. Re-runs on zoom/pan,
+  // so spreading nodes apart on screen reveals more names. Highlight neighbours are always kept.
+  let rafPending = false;
+  function scheduleLabels() { // throttle to one declutter per frame during continuous zoom/pan
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => { rafPending = false; refreshLabels(); });
+  }
   function refreshLabels() {
+    const t = d3.zoomTransform(svg.node()!);
+    labelSel.style("font-size", BASE_LABEL / t.k + "px"); // counter-scale → constant on-screen size
     const nb = neigh(hover ?? selected);
-    labelSel.style("display", (d) =>
-      !shown(d) ? "none" : nb ? (nb.has(d.id) ? null : "none") : labelled(d) ? null : "none");
+    const order = nb ? labelOrder.filter((d) => nb.has(d.id)) : labelOrder;
+    const placed: number[][] = [];
+    const show = new Set<string>();
+    const PAD = 4; // breathing room around each label so kept labels are clearly separated
+    for (const d of order) {
+      if (!shown(d)) continue;
+      const w = labelW.get(d.id) ?? 40;
+      const sx = d.x! * t.k + t.x;
+      const baseY = (d.y! - r(d.intensity) - 4) * t.k + t.y; // label baseline in screen space
+      const box = [sx - w / 2 - PAD, baseY - BASE_LABEL - PAD, sx + w / 2 + PAD, baseY + PAD];
+      const overlaps = placed.some((p) => box[0] < p[2] && box[2] > p[0] && box[1] < p[3] && box[3] > p[1]);
+      if (overlaps && !(nb && nb.has(d.id))) continue; // highlighted neighbours win even if tight
+      placed.push(box); show.add(d.id);
+    }
+    labelSel.style("display", (d) => (show.has(d.id) ? null : "none"));
   }
 
   // ---- edge hover: tooltip describing the connection + spotlight the two companies ----

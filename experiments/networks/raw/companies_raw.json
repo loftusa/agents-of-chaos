@@ -5718,6 +5718,74 @@
       "buyer_persona": "CISO / Head of Information Governance (owns content security and permissions)",
       "trigger": "Agents autonomously reading and acting on sensitive unstructured content (contracts, PII) under permission controls; a prompt-injection embedded in a document that exfiltrates data or mis-classifies sensitivity is a direct governance breach, motivating independent red-teaming.",
       "confidence": "high"
+    },
+    {
+      "name": "AIUC",
+      "vertical": "security-eval-vendor",
+      "blurb": "Artificial Intelligence Underwriting Company — pairs a security standard (AIUC-1, a 'SOC 2 for AI agents') with independent audits/red-teaming and insurance, so enterprises can deploy AI agents with liability coverage.",
+      "intensity": 3,
+      "intensity_evidence": "Emerged from stealth Jul 2025 with a $15M seed led by NFDG (Nat Friedman / Daniel Gross), with Emergence, Terrain, and angels incl. Anthropic co-founder Ben Mann. Runs independent red-teaming/audits against the AIUC-1 standard and underwrites the outcome. Newer than incumbent red-team labs. VERIFIED via Fortune, Insurance Journal, fintech.global.",
+      "url": "https://aiuc.com/",
+      "investors": [
+        "NFDG",
+        "Emergence",
+        "Terrain"
+      ],
+      "relationships": [
+        {
+          "target_name": "Agents of Chaos",
+          "type": "partner",
+          "verified": false,
+          "note": "Independent red-teaming feeds AIUC-1 audits — a natural assurance partner (inferred)."
+        }
+      ],
+      "buyer_persona": "CISO / Head of AI governance at enterprises adopting agents; AI vendors seeking certification",
+      "trigger": "Enterprise legal/security blocks an AI-agent rollout over liability — needs a standard, an audit, and insurance to proceed.",
+      "confidence": "high"
+    },
+    {
+      "name": "Helivan",
+      "vertical": "security-eval-vendor",
+      "blurb": "Real-time monitoring and evaluation for multi-agent AI systems (AgentWatch, Quench) — observability that flags behavioral drift and emergent behavior in production agents.",
+      "intensity": 2,
+      "intensity_evidence": "Early-stage. Products: AgentWatch (agent monitoring) and Quench (system evaluation) for multi-agent observability. Little public funding/customer data. Source: helivan.io (company site).",
+      "url": "https://helivan.io/",
+      "relationships": [
+        {
+          "target_name": "Agents of Chaos",
+          "type": "competitor",
+          "verified": false,
+          "note": "Adjacent agent eval/observability peer (inferred)."
+        }
+      ],
+      "buyer_persona": "ML platform / reliability engineers running multi-agent systems in production",
+      "trigger": "A multi-agent system in production shows unexplained or emergent behavior — needs real-time observability.",
+      "confidence": "medium"
+    },
+    {
+      "name": "Agents of Chaos",
+      "vertical": "security-eval-vendor",
+      "blurb": "Independent red-teaming for multi-agent AI systems — runs live multi-agent red-team campaigns against frontier agents; authored the Agents of Chaos study and has led internal red-team engagements for a frontier lab.",
+      "intensity": 4,
+      "intensity_evidence": "Operates live multi-agent red-team campaigns (its own agent swarms) against frontier agentic systems; specializes in multi-agent-system attacks. Source: agents-of-chaos.ai (own site).",
+      "url": "https://agents-of-chaos.ai",
+      "relationships": [
+        {
+          "target_name": "Gray Swan AI",
+          "type": "competitor",
+          "verified": true,
+          "note": "Both run adversarial red-team campaigns for frontier agents; Gray Swan's own profile names AoC a direct competitor."
+        },
+        {
+          "target_name": "Haize Labs",
+          "type": "competitor",
+          "verified": false,
+          "note": "Automated agent red-teaming peer (inferred)."
+        }
+      ],
+      "buyer_persona": "Frontier labs & enterprises deploying multi-agent systems — Head of Safety / Trust & Safety / CISO",
+      "trigger": "Shipping autonomous multi-agent systems and needing independent adversarial testing beyond what internal teams produce.",
+      "confidence": "high"
     }
   ],
   "counts": {
@@ -5725,12 +5793,12 @@
     "agent-native-startup": 59,
     "bank-fintech": 22,
     "healthcare": 18,
-    "security-eval-vendor": 23,
+    "security-eval-vendor": 26,
     "investor-vc": 16,
     "infra-platform": 17,
     "enterprise-other": 15
   },
-  "total": 184,
+  "total": 187,
   "dropped": [
     "Sevn",
     "Nuance / Microsoft Dragon (duplicate of Microsoft / Nuance (DAX Copilot) — same Dragon/DAX Copilot product; verified Cohere Health and Epic partner edges merged into the kept node)"
