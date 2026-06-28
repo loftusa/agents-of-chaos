@@ -23,6 +23,12 @@ DESCENT = -260
 TRACE_TOLERANCE = float(os.environ.get("AGENTS_SANS_TRACE_TOLERANCE", "1.2"))
 A_TRACE_TOLERANCE = float(os.environ.get("AGENTS_SANS_A_TRACE_TOLERANCE", "2.0"))
 LOWERCASE_SCALE = float(os.environ.get("AGENTS_SANS_LOWERCASE_SCALE", "7.9"))
+LOWER_XHEIGHT = 440
+LOWER_ASCENDER = 620
+LOWER_DOT_ASCENDER = 610
+LOWER_T_ASCENDER = 600
+LOWER_DESCENDER = -220
+LOWER_BASELINE = 0
 
 
 ROWS = [
@@ -137,6 +143,42 @@ def deepen_descender(glyph: object, target: int = -220, knee: int = 110) -> obje
     return glyph
 
 
+def normalize_lowercase_glyph(ch: str, glyph: object) -> object:
+    coords = getattr(glyph, "coordinates", None)
+    if not coords:
+        return glyph
+
+    recalc_bounds(glyph)
+    y_min = glyph.yMin
+    y_max = glyph.yMax
+    if y_max <= 0:
+        return glyph
+
+    if ch in "bdhklf":
+        top = LOWER_ASCENDER
+    elif ch in "ij":
+        top = LOWER_DOT_ASCENDER
+    elif ch == "t":
+        top = LOWER_T_ASCENDER
+    else:
+        top = LOWER_XHEIGHT
+
+    bottom = LOWER_DESCENDER if ch in "gjpqy" else LOWER_BASELINE
+    positive_scale = top / max(y_max, 1)
+    negative_scale = bottom / y_min if y_min < 0 and bottom < 0 else 0
+
+    for index, (x, y) in enumerate(coords):
+        if y >= 0:
+            coords[index] = (x, int(round(y * positive_scale)))
+        elif bottom < 0:
+            coords[index] = (x, int(round(y * negative_scale)))
+        else:
+            coords[index] = (x, LOWER_BASELINE)
+
+    recalc_bounds(glyph)
+    return glyph
+
+
 def tune_text_glyph(ch: str, glyph: object, advance: int) -> tuple[object, int]:
     """Normalize small lowercase glyphs for paragraph use."""
     if ch in "ijl":
@@ -149,6 +191,7 @@ def tune_text_glyph(ch: str, glyph: object, advance: int) -> tuple[object, int]:
         advance = max(advance, 410)
     if ch in "gjpqy":
         glyph = deepen_descender(glyph)
+    glyph = normalize_lowercase_glyph(ch, glyph)
     return glyph, advance
 
 
