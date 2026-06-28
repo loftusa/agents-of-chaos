@@ -116,6 +116,27 @@ def make_manual_glyph(
     return pen.glyph(), advance
 
 
+def chamfered_rect(
+    x0: int,
+    y0: int,
+    x1: int,
+    y1: int,
+    corner: int = 18,
+    clockwise: bool = True,
+) -> list[tuple[int, int]]:
+    points = [
+        (x0 + corner, y0),
+        (x0, y0 + corner),
+        (x0, y1 - corner),
+        (x0 + corner, y1),
+        (x1 - corner, y1),
+        (x1, y1 - corner),
+        (x1, y0 + corner),
+        (x1 - corner, y0),
+    ]
+    return points if clockwise else list(reversed(points))
+
+
 def append_manual_contours(glyph: object, contours: list[list[tuple[int, int]]]) -> object:
     pen = TTGlyphPen(None)
     glyph.draw(pen, None)
@@ -127,6 +148,105 @@ def append_manual_contours(glyph: object, contours: list[list[tuple[int, int]]])
     combined = pen.glyph()
     recalc_bounds(combined)
     return combined
+
+
+def manual_descender_glyph(ch: str) -> tuple[object, int]:
+    if ch == "g":
+        return make_manual_glyph(
+            [
+                [
+                    (126, 20),
+                    (76, 70),
+                    (76, 390),
+                    (126, 440),
+                    (500, 440),
+                    (550, 390),
+                    (550, 70),
+                    (500, 20),
+                    (258, 20),
+                    (258, -70),
+                    (510, -70),
+                    (510, -142),
+                    (462, -190),
+                    (208, -190),
+                    (160, -142),
+                    (160, 20),
+                ],
+                chamfered_rect(198, 118, 428, 332, 22, clockwise=False),
+            ],
+            641,
+        )
+    if ch == "j":
+        return make_manual_glyph(
+            [
+                [(84, -142), (84, 410), (114, 440), (194, 440), (194, -142), (146, -190)],
+                chamfered_rect(86, 520, 190, 610, 16, clockwise=True),
+            ],
+            320,
+        )
+    if ch == "p":
+        return make_manual_glyph(
+            [
+                [
+                    (76, -190),
+                    (76, 410),
+                    (106, 440),
+                    (500, 440),
+                    (550, 390),
+                    (550, 70),
+                    (500, 20),
+                    (190, 20),
+                    (190, -190),
+                ],
+                chamfered_rect(198, 118, 428, 332, 22, clockwise=False),
+            ],
+            633,
+        )
+    if ch == "q":
+        return make_manual_glyph(
+            [
+                [
+                    (550, -190),
+                    (436, -190),
+                    (436, 20),
+                    (126, 20),
+                    (76, 70),
+                    (76, 390),
+                    (126, 440),
+                    (520, 440),
+                    (550, 410),
+                ],
+                chamfered_rect(198, 118, 428, 332, 22, clockwise=False),
+            ],
+            633,
+        )
+    if ch == "y":
+        return make_manual_glyph(
+            [
+                [
+                    (76, 440),
+                    (186, 440),
+                    (186, 134),
+                    (222, 92),
+                    (392, 92),
+                    (436, 134),
+                    (436, 440),
+                    (546, 440),
+                    (546, -142),
+                    (498, -190),
+                    (252, -190),
+                    (252, -102),
+                    (426, -102),
+                    (436, -62),
+                    (436, 20),
+                    (190, 20),
+                    (116, 70),
+                    (76, 150),
+                ]
+            ],
+            633,
+        )
+    raise ValueError(f"No manual descender glyph for {ch!r}")
 
 
 def recalc_bounds(glyph: object) -> None:
@@ -524,6 +644,8 @@ def main() -> None:
             source_bottom = int(crop_ys.max()) if len(crop_ys) else y2 - y1
             if ch == "A":
                 glyph, advance = manual_a_glyph()
+            elif ch in "gjpqy":
+                glyph, advance = manual_descender_glyph(ch)
             elif ch.islower():
                 glyph, advance = trace_scaled_glyph(
                     crop,
