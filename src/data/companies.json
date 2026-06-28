@@ -2,14 +2,14 @@
   "meta": {
     "generated": "build_network.py",
     "source": "research swarm (discover → enrich → verify)",
-    "n_companies": 184,
-    "n_edges": 391,
+    "n_companies": 187,
+    "n_edges": 395,
     "by_vertical": {
       "frontier-lab": 14,
       "agent-native-startup": 59,
       "bank-fintech": 22,
       "healthcare": 18,
-      "security-eval-vendor": 23,
+      "security-eval-vendor": 26,
       "investor-vc": 16,
       "infra-platform": 17,
       "enterprise-other": 15
@@ -3087,6 +3087,44 @@
       "url": "https://www.box.com/agents",
       "buyer_persona": "CISO / Head of Information Governance (owns content security and permissions)",
       "trigger": "Agents autonomously reading and acting on sensitive unstructured content (contracts, PII) under permission controls; a prompt-injection embedded in a document that exfiltrates data or mis-classifies sensitivity is a direct governance breach, motivating independent red-teaming."
+    },
+    {
+      "id": "aiuc",
+      "name": "AIUC",
+      "vertical": "security-eval-vendor",
+      "blurb": "Artificial Intelligence Underwriting Company — pairs a security standard (AIUC-1, a 'SOC 2 for AI agents') with independent audits/red-teaming and insurance, so enterprises can deploy AI agents with liability coverage.",
+      "intensity": 3,
+      "confidence": "high",
+      "url": "https://aiuc.com/",
+      "buyer_persona": "CISO / Head of AI governance at enterprises adopting agents; AI vendors seeking certification",
+      "trigger": "Enterprise legal/security blocks an AI-agent rollout over liability — needs a standard, an audit, and insurance to proceed.",
+      "investors": [
+        "Emergence",
+        "NFDG",
+        "Terrain"
+      ]
+    },
+    {
+      "id": "helivan",
+      "name": "Helivan",
+      "vertical": "security-eval-vendor",
+      "blurb": "Real-time monitoring and evaluation for multi-agent AI systems (AgentWatch, Quench) — observability that flags behavioral drift and emergent behavior in production agents.",
+      "intensity": 2,
+      "confidence": "medium",
+      "url": "https://helivan.io/",
+      "buyer_persona": "ML platform / reliability engineers running multi-agent systems in production",
+      "trigger": "A multi-agent system in production shows unexplained or emergent behavior — needs real-time observability."
+    },
+    {
+      "id": "agents-of-chaos",
+      "name": "Agents of Chaos",
+      "vertical": "security-eval-vendor",
+      "blurb": "Independent red-teaming for multi-agent AI systems — runs live multi-agent red-team campaigns against frontier agents; authored the Agents of Chaos study and has led internal red-team engagements for a frontier lab.",
+      "intensity": 4,
+      "confidence": "high",
+      "url": "https://agents-of-chaos.ai",
+      "buyer_persona": "Frontier labs & enterprises deploying multi-agent systems — Head of Safety / Trust & Safety / CISO",
+      "trigger": "Shipping autonomous multi-agent systems and needing independent adversarial testing beyond what internal teams produce."
     }
   ],
   "edges": [
@@ -4609,6 +4647,34 @@
       "type": "competitor",
       "verified": false,
       "label": "Loose overlap on turning enterprise unstructured data into structured outputs via agents; not a corroborated named tie"
+    },
+    {
+      "source": "aiuc",
+      "target": "agents-of-chaos",
+      "type": "business",
+      "verified": false,
+      "label": "Independent red-teaming feeds AIUC-1 audits — a natural assurance partner (inferred)."
+    },
+    {
+      "source": "helivan",
+      "target": "agents-of-chaos",
+      "type": "competitor",
+      "verified": false,
+      "label": "Adjacent agent eval/observability peer (inferred)."
+    },
+    {
+      "source": "agents-of-chaos",
+      "target": "gray-swan-ai",
+      "type": "competitor",
+      "verified": true,
+      "label": "Both run adversarial red-team campaigns for frontier agents; Gray Swan's own profile names AoC a direct competitor."
+    },
+    {
+      "source": "agents-of-chaos",
+      "target": "haize-labs",
+      "type": "competitor",
+      "verified": false,
+      "label": "Automated agent red-teaming peer (inferred)."
     },
     {
       "source": "anthropic",
