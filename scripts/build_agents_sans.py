@@ -27,7 +27,7 @@ LOWER_XHEIGHT = 440
 LOWER_ASCENDER = 620
 LOWER_DOT_ASCENDER = 610
 LOWER_T_ASCENDER = 600
-LOWER_DESCENDER = -220
+LOWER_DESCENDER = -190
 LOWER_BASELINE = 0
 
 
@@ -116,6 +116,19 @@ def make_manual_glyph(
     return pen.glyph(), advance
 
 
+def append_manual_contours(glyph: object, contours: list[list[tuple[int, int]]]) -> object:
+    pen = TTGlyphPen(None)
+    glyph.draw(pen, None)
+    for contour in contours:
+        pen.moveTo(contour[0])
+        for point in contour[1:]:
+            pen.lineTo(point)
+        pen.closePath()
+    combined = pen.glyph()
+    recalc_bounds(combined)
+    return combined
+
+
 def recalc_bounds(glyph: object) -> None:
     coords = getattr(glyph, "coordinates", None)
     if not coords:
@@ -179,6 +192,30 @@ def normalize_lowercase_glyph(ch: str, glyph: object) -> object:
     return glyph
 
 
+def refine_descender_shape(ch: str, glyph: object) -> object:
+    coords = getattr(glyph, "coordinates", None)
+    if not coords:
+        return glyph
+    if ch == "p":
+        for index, (x, y) in enumerate(coords):
+            if x <= 210 and y < -105:
+                coords[index] = (x, LOWER_DESCENDER)
+    elif ch == "q":
+        for index, (x, y) in enumerate(coords):
+            if x >= 420 and y < -105:
+                coords[index] = (x, LOWER_DESCENDER)
+    elif ch == "y":
+        for index, (x, y) in enumerate(coords):
+            if y < -145:
+                coords[index] = (470 if x < 500 else 530, LOWER_DESCENDER)
+            elif y < 0:
+                coords[index] = (x, int(round(y * 0.86)))
+    else:
+        return glyph
+    recalc_bounds(glyph)
+    return glyph
+
+
 def tune_text_glyph(ch: str, glyph: object, advance: int) -> tuple[object, int]:
     """Normalize small lowercase glyphs for paragraph use."""
     if ch in "ijl":
@@ -192,7 +229,39 @@ def tune_text_glyph(ch: str, glyph: object, advance: int) -> tuple[object, int]:
     if ch in "gjpqy":
         glyph = deepen_descender(glyph)
     glyph = normalize_lowercase_glyph(ch, glyph)
+    glyph = refine_descender_shape(ch, glyph)
     return glyph, advance
+
+
+def manual_punctuation_glyph(ch: str) -> tuple[object, int]:
+    if ch == ".":
+        return make_manual_glyph([[(62, 0), (150, 0), (150, 88), (62, 88)]], 230)
+    if ch == ",":
+        return make_manual_glyph(
+            [
+                [(62, 0), (150, 0), (150, 88), (62, 88)],
+                [(106, -95), (168, 0), (112, 0), (50, -95)],
+            ],
+            230,
+        )
+    if ch == ":":
+        return make_manual_glyph(
+            [
+                [(62, 0), (150, 0), (150, 88), (62, 88)],
+                [(62, 292), (150, 292), (150, 380), (62, 380)],
+            ],
+            230,
+        )
+    if ch == ";":
+        return make_manual_glyph(
+            [
+                [(62, 0), (150, 0), (150, 88), (62, 88)],
+                [(106, -95), (168, 0), (112, 0), (50, -95)],
+                [(62, 292), (150, 292), (150, 380), (62, 380)],
+            ],
+            230,
+        )
+    raise ValueError(f"No manual punctuation glyph for {ch!r}")
 
 
 def manual_special_glyph(ch: str) -> tuple[object, int]:
@@ -465,6 +534,8 @@ def main() -> None:
                     threshold=120,
                 )
                 glyph, advance = tune_text_glyph(ch, glyph, advance)
+            elif ch in ".,;:":
+                glyph, advance = manual_punctuation_glyph(ch)
             elif ch in '!@#$%^&*()_-+=[]{}|;:"\',.<>':
                 glyph, advance = trace_scaled_glyph(
                     crop,
