@@ -8,7 +8,13 @@ import LoopDiagram from "../components/LoopDiagram.astro";
     <div class="hero-ambient" aria-hidden="true"></div>
     <div class="hero-copy">
       <p class="kicker">multi-agent red-team infrastructure</p>
-      <h1>Agents of Chaos</h1>
+      <h1 class="sr-only">Agents of Chaos</h1>
+      <img
+        class="hero-title-logo"
+        src="/brand/aoc-logo-agents-of-chaos.svg"
+        alt=""
+        aria-hidden="true"
+      />
       <p class="subtitle">Built to operate. Designed to disrupt.</p>
       <p class="hero-summary">
         We build realistic agent environments, attack them under pressure, and
@@ -19,11 +25,6 @@ import LoopDiagram from "../components/LoopDiagram.astro";
         <a href="#what-we-do">what we do</a>
         <a href="/contact">contact</a>
       </nav>
-    </div>
-    <div class="hero-visual">
-      <div class="identity-lockup" data-scroll-logo aria-label="Agents of Chaos animated logo">
-        <img class="identity-logo" src="/brand/aoc-logo-agents-of-chaos.svg" alt="" />
-      </div>
     </div>
   </header>
 
@@ -128,21 +129,6 @@ import LoopDiagram from "../components/LoopDiagram.astro";
       });
     });
 
-    const logo = document.querySelector<HTMLElement>("[data-scroll-logo]");
-
-    const updateLogoMotion = () => {
-      if (!logo) return;
-      const hero = logo.closest<HTMLElement>(".hero");
-      if (!hero) return;
-      const rect = hero.getBoundingClientRect();
-      const range = Math.max(1, rect.height + window.innerHeight * 0.45);
-      const progress = Math.min(1, Math.max(0, -rect.top / range));
-      logo.style.setProperty("--scroll-progress", progress.toFixed(4));
-    };
-
-    updateLogoMotion();
-    window.addEventListener("scroll", updateLogoMotion, { passive: true });
-    window.addEventListener("resize", updateLogoMotion);
   </script>
 
   <LoopDiagram />
