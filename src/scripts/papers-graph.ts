@@ -67,6 +67,10 @@ export async function initPapersGraph() {
   wireControls();
   renderReadList();
   setStatus(`${read.length} papers · drag the slider to nominate more`);
+  // Preload the discovery frontier in the background so the FIRST slider tick reveals a paper
+  // instantly (later ticks are already synchronous). Silent — no ghosts or status change until
+  // you drag. Skipped if the set has no Semantic-Scholar-id papers to seed recommendations on.
+  if (read.some((n) => /^[0-9a-f]{40}$/i.test(n.id))) loadFrontier(false);
   // Escape clears the current selection (and closes the paper panel)
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { hideDetail(); clearFocus(); } });
   // ResizeObserver's contentRect is the authoritative box size (and corrects any
@@ -139,7 +143,10 @@ function focusLabel(nodes: PaperNode[]): string {
 //   • a focus   → recommendations seeded on that ONE paper, ranked by cosine to it (click a node)
 // Two phases so a throttled embeddings call can't stall the reveal: show the recommended
 // papers at once in S2's own relevance order, then re-rank by SPECTER2 in the background.
-async function loadFrontier() {
+// `reveal = false` is a silent PRELOAD: fetch and stage the candidates but touch nothing on
+// screen (no ghosts, no status, no read-list) until the user actually drags. That's what makes
+// the first slider tick instant — the network round-trip already happened in the background.
+async function loadFrontier(reveal = true) {
   if (frontierBusy || frontierLoaded) return;
   const myKey = frontierKey();
   const focusNodes = focusIds.map((id) => read.find((n) => n.id === id)).filter(Boolean) as PaperNode[];
@@ -149,21 +156,24 @@ async function loadFrontier() {
   const focusS2 = focusNodes.map((n) => n.id).filter(isS2);
   const seedIds = focusS2.length ? focusS2 : read.map((n) => n.id).filter(isS2);
   if (!seedIds.length) {
-    setStatus(focusNodes.length
-      ? "can't nominate from this selection — no Semantic Scholar ids"
-      : "add a paper by arXiv / DOI / S2 id to get recommendations");
-    (el("discover") as HTMLInputElement).disabled = false;
+    if (reveal) {
+      setStatus(focusNodes.length
+        ? "can't nominate from this selection — no Semantic Scholar ids"
+        : "add a paper by arXiv / DOI / S2 id to get recommendations");
+      (el("discover") as HTMLInputElement).disabled = false;
+    }
     return;
   }
   frontierBusy = true;
-  setStatus(focusNodes.length ? `finding papers close to ${focusLabel(focusNodes)}…` : "finding papers you should read…");
+  if (reveal) setStatus(focusNodes.length ? `finding papers close to ${focusLabel(focusNodes)}…` : "finding papers you should read…");
   try {
     const rec = await s2({ positivePaperIds: seedIds, limit: 80 });
     const recPapers = (rec.recommendedPapers || [])
       .filter((p: any) => p && p.paperId && !read.some((r) => r.id === p.paperId));
     if (!recPapers.length) {
-      // the (light) recommendations call itself failed/empty — usually rate-limiting.
-      setStatus("no papers found — Semantic Scholar may be rate-limiting; drag again to retry");
+      // the (light) recommendations call itself failed/empty — usually rate-limiting. Stay
+      // unloaded so a real drag retries (a silent preload just gives up quietly).
+      if (reveal) setStatus("no papers found — Semantic Scholar may be rate-limiting; drag again to retry");
     } else if (frontierKey() === myKey) {
       // phase 1 — show at once in S2's relevance order (already "close to" the seeds)
       const rankSeeds = focusNodes.filter((n) => n.vec).length ? focusNodes.filter((n) => n.vec) : read;
@@ -172,20 +182,26 @@ async function loadFrontier() {
       candidates = (recPapers.map(toNode).filter(Boolean) as PaperNode[])
         .map((c, i) => ({ ...c, ghost: true, vnScore: 1 - i / recPapers.length, nearestId: anchorId }));
       frontierLoaded = true;
-      revealCount = Math.max(revealCount, Math.min(6, candidates.length));
+      if (reveal) revealCount = Math.max(revealCount, Math.min(6, candidates.length));
       (el("discover") as HTMLInputElement).disabled = false;
       enrichFrontier(recPapers, rankSeeds, anchorId, myKey, agg); // phase 2 — SPECTER2 re-rank, background
     }
   } catch {
-    setStatus("couldn't reach Semantic Scholar — drag again to retry");
+    if (reveal) setStatus("couldn't reach Semantic Scholar — drag again to retry");
   } finally {
     frontierBusy = false;
     if (frontierKey() !== myKey) {   // focus changed while fetching → load the current one
       frontierLoaded = false;
-      loadFrontier();
-    } else {
+      loadFrontier(reveal);
+    } else if (reveal) {
       if (frontierLoaded) setStatus(frontierStatus(focusNodes));
       syncReveal(); renderReadList();
+    } else if (frontierLoaded) {
+      // silent preload finished. If the user already started dragging while it loaded, honor
+      // the slider now; otherwise stay invisible until they do.
+      const s = el("discover") as HTMLInputElement;
+      const want = Math.round((+s.value / 100) * Math.min(candidates.length, MAX_REVEAL));
+      if (want > 0) { revealCount = want; setStatus(frontierStatus(focusNodes)); syncReveal(); renderReadList(); }
     }
   }
 }
@@ -206,7 +222,7 @@ async function enrichFrontier(recPapers: any[], rankSeeds: PaperNode[], anchorId
       ...without.map((c, i) => ({ ...c, vnScore: -1 - i, nearestId: anchorId })),
     ];
     candidates.forEach((c) => { c.ghost = true; if (!c.nearestId) c.nearestId = anchorId; });
-    syncReveal(); renderReadList();
+    if (revealCount > 0) { syncReveal(); renderReadList(); } // nothing revealed yet (e.g. preload) → stay silent
   } catch { /* keep phase 1's S2-order candidates */ }
 }
 

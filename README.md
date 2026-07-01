@@ -62,10 +62,15 @@ relevance, and a discovery slider nominates unread papers worth reading next.
   it; shift-click several to find papers closest to all of them.
 - **Add a paper / hover-heat**: a new paper drops in via its own SPECTER2 vector (no re-embedding);
   hovering shades every node by relevance, scaled relative to the (compressed) cosine band.
-- **Data flow**: visitors load the static `public/papers.json` (no API calls). Adding a paper or
-  expanding the frontier calls `api/paper.js` — a root-level **Vercel serverless function** that
-  proxies Semantic Scholar and holds the API key. If that function is unavailable (e.g. `astro dev`),
-  the client falls back to calling Semantic Scholar directly (anonymous, CORS-enabled).
+- **Data flow**: visitors load the static `public/papers.json`, then the page **preloads the
+  discovery frontier in the background** (a `loadFrontier(false)` call on load) so the first slider
+  tick reveals a paper instantly instead of waiting ~3s for the network — subsequent ticks are a
+  synchronous ~0.3ms render. The preload is silent (no ghosts/status until you drag). Adding a paper
+  or expanding the frontier also calls `api/paper.js` — a root-level **Vercel serverless function**
+  that proxies Semantic Scholar and holds the API key. If that function is unavailable (e.g.
+  `astro dev`), the client falls back to calling Semantic Scholar directly (anonymous, CORS-enabled).
+  *(Trade-off: the preload means a page view now makes one recommendations + one embeddings request,
+  where before a pure view made none.)*
 
 ### Setup / deploy
 
