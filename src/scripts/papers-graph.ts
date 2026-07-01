@@ -54,9 +54,15 @@ const el = (id: string) => document.getElementById(id)!;
 // ── boot ────────────────────────────────────────────────────────────────────────
 export async function initPapersGraph() {
   const host = el("papers-graph");
-  baked = await fetch("/papers.json").then((r) => r.json()).then((d) => d.nodes || []).catch(() => []);
+  const data = await fetch("/papers.json").then((r) => r.json()).catch(() => ({}));
+  baked = data.nodes || [];
   const removed = loadRemoved();
   read = mergeAdds(baked.filter((n) => !removed.has(n.id)), loadAdds());
+  // Seed the discovery frontier from the baked snapshot so the FIRST slider tick reveals a paper
+  // instantly — even if you drag before the live refresh lands. (Filter out any you've already
+  // added.) The background refresh below replaces this with fresh, embedding-ranked candidates.
+  const bakedFrontier: PaperNode[] = (data.frontier || []).filter((c: PaperNode) => !read.some((n) => n.id === c.id));
+  if (bakedFrontier.length) { candidates = bakedFrontier; frontierLoaded = true; }
   explainers = await fetch("/papers/explainers.json").then((r) => r.json()).catch(() => ({})); // which papers have explainers
   await new Promise(requestAnimationFrame); // let the layout settle so the box has real dimensions
   const rect = host.getBoundingClientRect();
@@ -70,7 +76,7 @@ export async function initPapersGraph() {
   // Preload the discovery frontier in the background so the FIRST slider tick reveals a paper
   // instantly (later ticks are already synchronous). Silent — no ghosts or status change until
   // you drag. Skipped if the set has no Semantic-Scholar-id papers to seed recommendations on.
-  if (read.some((n) => /^[0-9a-f]{40}$/i.test(n.id))) loadFrontier(false);
+  if (read.some((n) => /^[0-9a-f]{40}$/i.test(n.id))) loadFrontier(false, frontierLoaded); // refresh past the baked snapshot
   // Escape clears the current selection (and closes the paper panel)
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { hideDetail(); clearFocus(); } });
   // ResizeObserver's contentRect is the authoritative box size (and corrects any
@@ -146,8 +152,8 @@ function focusLabel(nodes: PaperNode[]): string {
 // `reveal = false` is a silent PRELOAD: fetch and stage the candidates but touch nothing on
 // screen (no ghosts, no status, no read-list) until the user actually drags. That's what makes
 // the first slider tick instant — the network round-trip already happened in the background.
-async function loadFrontier(reveal = true) {
-  if (frontierBusy || frontierLoaded) return;
+async function loadFrontier(reveal = true, force = false) {
+  if (frontierBusy || (frontierLoaded && !force)) return; // `force` refreshes past a baked/preloaded frontier
   const myKey = frontierKey();
   const focusNodes = focusIds.map((id) => read.find((n) => n.id === id)).filter(Boolean) as PaperNode[];
   const isS2 = (id: string) => /^[0-9a-f]{40}$/i.test(id);
